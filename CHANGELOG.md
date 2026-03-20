@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] - 2026-03-20
+
+### Audit Infrastructure Complet
+
+Vérification de l'état réel de toutes les machines vs documentation.
+
+### Corrections
+
+#### IPs & Réseaux
+- M1 Proxmox host confirmé : `192.168.1.100` (hostname `pve`, PVE 8.4.14)
+- M2 Proxmox host confirmé : `192.168.1.200` (hostname `srv2`, PVE 9.1.1)
+- VM-INTRANET IP réelle : `192.168.1.201` (doc indiquait `192.168.1.101`)
+- LXC Minecraft changement d'IP : `192.168.1.102` → `192.168.1.202` (cohérence INTRANET 20x)
+
+#### Services non documentés découverts
+- **LXC lxc-web (102)** sur M1 à `192.168.1.112` (non documenté)
+- **LXC minecraft-cobblemon (200)** sur M2 : 3 profils via `mc-switch`
+  - `cobbleverse` (Fabric, actif — heap 10 GB)
+  - `cobblemon-academy` (Fabric)
+  - `demon-slayer` (Forge)
+- **ZFS M1** : 2 pools — `tank-hdd` (464 GB) + `tank-ssd` (14.5 GB)
+
+#### Alertes ⚠️
+- OpenVPN : **inactif** sur vm-extranet
+- ddclient : **inactif** sur vm-extranet
+- UFW : **absent** sur vm-extranet et vm-intranet
+- Nextcloud : **non déployé** (mentionné dans doc comme prévu)
+
+---
+
 ## [2.0.0] - 2025-11-28
 
 ### 🎯 **MAJOR RELEASE: Architecture 2 Machines**

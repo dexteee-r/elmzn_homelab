@@ -19,11 +19,12 @@
 ### 🎯 Cas d'Usage Principaux
 
 - ✅ **Stockage photos famille** (Immich) - 2 TB disponible
-- ✅ **Partage fichiers** (Nextcloud - futur) - accès web + mobile
+- ✅ **Partage fichiers** (Nextcloud - non déployé, prévu)
 - ✅ **VMs laboratoire** (Debian test) - apprentissage
 - ✅ **Monitoring** (Prometheus + Grafana)
-- ✅ **Accès distant sécurisé** (OpenVPN - M1)
+- ⚠️ **Accès distant** (OpenVPN - inactif au 2026-03-20)
 - ✅ **Reverse proxy SSL** (Nginx Proxy Manager)
+- ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
 
 ---
 
@@ -40,18 +41,19 @@ Box Internet (192.168.1.1)
 │
 └─ LAN (192.168.1.0/24)
    │
-   ├─ Machine #1 : EXTRANET (DMZ)
-   │  ├─ IP : 192.168.1.111
-   │  ├─ Rôle : Exposition Internet UNIQUEMENT
-   │  ├─ Hardware : Dell OptiPlex 7040 (i5-6500, 16GB RAM)
-   │  └─ Services : NPM public, OpenVPN, Fail2ban
+   ├─ Machine #1 : EXTRANET (DMZ) — Dell OptiPlex 7040, PVE 8.4.14
+   │  ├─ Proxmox host    : 192.168.1.100
+   │  ├─ VM-EXTRANET (101): 192.168.1.111
+   │  │   └─ Services : NPM, fail2ban
+   │  │   ⚠️  OpenVPN inactif — ddclient inactif (vérifier)
+   │  └─ LXC lxc-web (102) : 192.168.1.112
    │
-   └─ Machine #2 : INTRANET (Privé)
-      ├─ IP Host : 192.168.1.200
-      ├─ IP VM : 192.168.1.201
-      ├─ Rôle : Stockage + Services + VMs Lab
-      ├─ Hardware : Custom PC (i7-6700, 16GB RAM, GTX 980, 4TB HDD)
-      └─ Services : Immich, NPM local, Grafana, Prometheus, VMs dev
+   └─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
+      ├─ Proxmox host        : 192.168.1.200
+      ├─ VM-INTRANET (101)   : 192.168.1.201
+      │   └─ Services : NPM, Immich, Grafana, Prometheus, node_exporter
+      └─ LXC minecraft-cobblemon (200) : 192.168.1.202
+          └─ Serveurs : cobbleverse★ (Fabric), cobblemon-academy (Fabric), demon-slayer (Forge)
 ```
 
 **Principe :** Machine #2 **JAMAIS** exposée directement à Internet.
@@ -70,18 +72,27 @@ Box Internet (192.168.1.1)
 | **HDD** | 500 GB SATA (backups Machine #2) |
 | **GPU** | Intel HD 530 (iGPU) |
 | **Réseau** | Gigabit Ethernet |
+| **PVE** | 8.4.14 (kernel 6.8.12-16-pve) |
+
+**ZFS (M1) :**
+
+| Pool | Taille | Datasets |
+|------|--------|----------|
+| `tank-hdd` | 464 GB | backups / logs / media / photos |
+| `tank-ssd` | 14.5 GB | appdata / postgres |
 
 ### **Machine #2 : INTRANET (Custom Build)**
 
 | Composant | Specs |
 |-----------|-------|
 | **CPU** | Intel Core i7-6700 (4C/**8T** @ 3.4-4.0 GHz) |
-| **RAM** | 16 GB DDR4-2133 |
+| **RAM** | 16 GB DDR4-2133 (15 GB vus par PVE) |
 | **SSD** | Crucial MX500 447 GB (Proxmox + VMs) |
 | **HDD** | Seagate IronWolf 4 TB NAS (stockage ZFS) |
 | **GPU** | NVIDIA GeForce GTX 980 (4 GB GDDR5) |
 | **Réseau** | Gigabit Ethernet |
 | **Alim** | 850W |
+| **PVE** | 9.1.1 (kernel 6.17.2-2-pve) |
 
 ---
 
@@ -89,24 +100,54 @@ Box Internet (192.168.1.1)
 
 ### **Machine #2 : INTRANET (Production)**
 
-| Service | URL | Description |
-|---------|-----|-------------|
+| Service | URL / Port | Description |
+|---------|-----------|-------------|
 | **Immich** | https://immich.intranet.elmzn.be | Gestion photos famille (2 TB) |
-| **Nginx Proxy Manager** | https://npm.intranet.elmzn.be | Reverse proxy local + SSL |
-| **Grafana** | https://grafana.intranet.elmzn.be | Dashboards monitoring |
-| **Prometheus** | https://prometheus.intranet.elmzn.be | Collecte métriques |
-| **PostgreSQL** | 192.168.1.201:5432 | Base de données Immich |
-| **Redis** | 192.168.1.201:6379 | Cache Immich |
-| **Node Exporter** | 192.168.1.201:9100 | Métriques système |
+| **Nginx Proxy Manager** | :81 | Reverse proxy local + SSL |
+| **Grafana** | :3000 | Dashboards monitoring |
+| **Prometheus** | :9090 | Collecte métriques |
+| **PostgreSQL** | :5432 (interne) | Base de données Immich (pgvecto-rs:pg14) |
+| **Redis** | :6379 (interne) | Cache Immich (redis:6.2-alpine) |
+| **Node Exporter** | :9100 | Métriques système |
 
-### **Stockage ZFS (4TB HDD)**
+### **Machine #1 : EXTRANET**
 
-| Dataset | Quota | Usage | Mountpoint |
-|---------|-------|-------|------------|
-| `data-pool/photos` | 2 TB | Immich uploads | `/mnt/data-pool/photos` |
-| `data-pool/files` | 512 GB | Nextcloud (futur) | `/mnt/data-pool/files` |
-| `data-pool/backups` | 512 GB | Snapshots + Restic | `/mnt/data-pool/backups` |
-| `data-pool/media` | 512 GB | Vidéos (futur) | `/mnt/data-pool/media` |
+| Service | Port | Description |
+|---------|------|-------------|
+| **Nginx Proxy Manager** | 80, 81, 443 | Reverse proxy public + SSL |
+| **fail2ban** | — | Protection bruteforce (actif) |
+| **OpenVPN** | — | ⚠️ Inactif au 2026-03-20 |
+| **ddclient** | — | ⚠️ Inactif au 2026-03-20 |
+
+### **LXC Minecraft (Machine #2)**
+
+| Service | IP | Description |
+|---------|-----|-------------|
+| **minecraft-cobblemon** | 192.168.1.202:25565 | Serveur Minecraft (Fabric/Forge) |
+
+Profils gérés par `mc-switch` :
+
+| Profil | Modloader | Statut |
+|--------|-----------|--------|
+| `cobbleverse` | Fabric | ★ Actif |
+| `cobblemon-academy` | Fabric | Disponible |
+| `demon-slayer` | Forge | Disponible |
+
+### **Stockage ZFS — Machine #2 (4 TB HDD)**
+
+| Dataset | Quota | Utilisé | Mountpoint |
+|---------|-------|---------|------------|
+| `data-pool/photos` | ~2 TB | 9.6 GB | `/mnt/data-pool/photos` (NFS → vmIntranet) |
+| `data-pool/files` | 512 GB | 0 | `/mnt/data-pool/files` (NFS → vmIntranet) |
+| `data-pool/backups` | 512 GB | 0 | `/mnt/data-pool/backups` (NFS → vmIntranet) |
+| `data-pool/media` | 512 GB | 0 | `/mnt/data-pool/media` (NFS → vmIntranet) |
+
+### **Stockage ZFS — Machine #1**
+
+| Pool | Taille | Datasets |
+|------|--------|----------|
+| `tank-hdd` | 464 GB | backups / logs / media / photos |
+| `tank-ssd` | 14.5 GB | appdata / postgres |
 
 **Partage réseau:**
 - **NFS:** Accessible depuis VMs Proxmox (192.168.1.0/24)
@@ -292,23 +333,30 @@ docker compose restart immich_server
 docker compose ps
 ```
 
-### **Gestion VMs Proxmox**
+### **Gestion VMs & LXC Proxmox**
 ```bash
 # SSH vers Proxmox M2
-ssh root@192.168.1.200
+ssh root@192.168.1.200   # srv2
 
-# Lister VMs
-qm list
+# Lister VMs et LXC
+qm list && pct list
 
-# Démarrer VM
-qm start 101   # VM-INTRANET
-qm start 102   # VM-DEBIAN-TEST
-
-# Arrêter VM
+# VM-INTRANET (101)
+qm start 101
 qm stop 101
-
-# Voir statut
 qm status 101
+
+# LXC minecraft-cobblemon (200)
+pct start 200
+pct stop 200
+pct exec 200 -- mc-switch list
+
+# SSH vers Proxmox M1
+ssh root@192.168.1.100   # pve
+
+# LXC lxc-web (102) sur M1
+pct start 102
+pct stop 102
 ```
 
 ### **Gestion ZFS**
@@ -344,12 +392,14 @@ restic restore latest --target /restore --tag photos
 
 ### **Architecture Defense in Depth**
 
-1. **Box Firewall** - Ports 80/443/1194 UNIQUEMENT vers Machine #1
+1. **Box Firewall** - Ports 80/443 UNIQUEMENT vers Machine #1
 2. **Proxmox Firewall** - Règles datacenter + VM + node
-3. **UFW Machine #2** - Allow depuis M1 + LAN ONLY, deny Internet direct
-4. **NPM Access Lists** - Grafana/Prometheus = LAN + VPN uniquement
-5. **Fail2ban** - Auto-ban bruteforce (M1)
-6. **Application Auth** - Comptes + passwords forts
+3. **NPM Access Lists** - Grafana/Prometheus = LAN uniquement
+4. **Fail2ban** - Auto-ban bruteforce (M1, actif)
+5. **Application Auth** - Comptes + passwords forts
+
+> ⚠️ UFW non installé sur VM-EXTRANET et VM-INTRANET (vérifier si nécessaire)
+> ⚠️ OpenVPN inactif sur M1 — accès VPN non opérationnel
 
 **Principe:** Machine #2 JAMAIS exposée directement Internet.
 
@@ -450,7 +500,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 04 décembre 2025  
+**Dernière mise à jour:** 20 mars 2026 (audit infrastructure complet)
 **Version architecture:** 2.0 (2 machines EXTRANET/INTRANET)
 
 ---
