@@ -41,10 +41,10 @@ Box Internet (192.168.1.1)
 │
 └─ LAN (192.168.1.0/24)
    │
-   ├─ Machine #1 : EXTRANET (DMZ) — Dell OptiPlex 7040, PVE 8.4.14
+   ├─ Machine #1 : EXTRANET (DMZ) — Beelink S12, PVE 9.1
    │  ├─ Proxmox host    : 192.168.1.100
    │  ├─ VM-EXTRANET (101): 192.168.1.111
-   │  │   └─ Services : NPM, fail2ban
+   │  │   └─ Services : NPM, UFW, fail2ban
    │  │   ⚠️  OpenVPN inactif — ddclient inactif (vérifier)
    │  └─ LXC lxc-web (102) : 192.168.1.112
    │
@@ -62,24 +62,15 @@ Box Internet (192.168.1.1)
 
 ## 🖥️ Matériel
 
-### **Machine #1 : EXTRANET (Dell OptiPlex 7040)**
+### **Machine #1 : EXTRANET (Beelink S12)**
 
 | Composant | Specs |
 |-----------|-------|
-| **CPU** | Intel Core i5-6500 (4C/4T @ 3.2-3.6 GHz) |
-| **RAM** | 16 GB DDR4-2133 |
-| **SSD** | Samsung NVMe 256 GB (Proxmox + VMs) |
-| **HDD** | 500 GB SATA (backups Machine #2) |
-| **GPU** | Intel HD 530 (iGPU) |
-| **Réseau** | Gigabit Ethernet |
-| **PVE** | 8.4.14 (kernel 6.8.12-16-pve) |
-
-**ZFS (M1) :**
-
-| Pool | Taille | Datasets |
-|------|--------|----------|
-| `tank-hdd` | 464 GB | backups / logs / media / photos |
-| `tank-ssd` | 14.5 GB | appdata / postgres |
+| **CPU** | Intel N95 (Alder Lake, 12e gen) |
+| **RAM** | 16 GB DDR4 |
+| **SSD** | 512 GB (Proxmox + VMs) |
+| **Réseau** | 2.5 Gigabit Ethernet |
+| **PVE** | 9.1 |
 
 ### **Machine #2 : INTRANET (Custom Build)**
 
@@ -115,9 +106,10 @@ Box Internet (192.168.1.1)
 | Service | Port | Description |
 |---------|------|-------------|
 | **Nginx Proxy Manager** | 80, 81, 443 | Reverse proxy public + SSL |
-| **fail2ban** | — | Protection bruteforce (actif) |
-| **OpenVPN** | — | ⚠️ Inactif au 2026-03-20 |
-| **ddclient** | — | ⚠️ Inactif au 2026-03-20 |
+| **UFW** | — | Firewall actif (SSH LAN only, HTTP/HTTPS open) |
+| **fail2ban** | — | Protection bruteforce (SSH + Nginx) |
+| **OpenVPN** | — | ⚠️ Inactif |
+| **ddclient** | — | ⚠️ Inactif |
 
 ### **LXC Minecraft (Machine #2)**
 
@@ -393,12 +385,11 @@ restic restore latest --target /restore --tag photos
 ### **Architecture Defense in Depth**
 
 1. **Box Firewall** - Ports 80/443 UNIQUEMENT vers Machine #1
-2. **Proxmox Firewall** - Règles datacenter + VM + node
-3. **NPM Access Lists** - Grafana/Prometheus = LAN uniquement
-4. **Fail2ban** - Auto-ban bruteforce (M1, actif)
+2. **UFW** - SSH LAN only, HTTP/HTTPS ouvert, tout le reste bloqué (vm-extranet ✅)
+3. **Fail2ban** - SSH ban 24h, Nginx auth/rate-limit ban 1h (vm-extranet ✅)
+4. **NPM Access Lists** - Grafana/Prometheus = LAN uniquement
 5. **Application Auth** - Comptes + passwords forts
 
-> ⚠️ UFW non installé sur VM-EXTRANET et VM-INTRANET (vérifier si nécessaire)
 > ⚠️ OpenVPN inactif sur M1 — accès VPN non opérationnel
 
 **Principe:** Machine #2 JAMAIS exposée directement Internet.
@@ -444,14 +435,13 @@ restic restore latest --target /restore --tag photos
 - [x] Certificats SSL Let's Encrypt
 - [x] Proxy hosts NPM configurés
 - [x] Immich fonctionnel avec uploads
-- [x] VM Debian test créée
+- [x] Migration Machine #1 Dell OptiPlex 7040 → Beelink S12 (2026-03-21)
+- [x] UFW + Fail2ban opérationnels sur vm-extranet (2026-03-22)
 
 ### 🔄 En Cours
 
-- [ ] Configuration NPM M1 (reverse proxy public)
-- [ ] Port forwarding box Internet
-- [ ] Tests accès externe
 - [ ] Backups automatisés
+- [ ] Tester elmzn.be depuis Internet (4G)
 
 ### 📅 Prochaines Étapes
 
@@ -500,8 +490,8 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 20 mars 2026 (audit infrastructure complet)
-**Version architecture:** 2.0 (2 machines EXTRANET/INTRANET)
+**Dernière mise à jour:** 22 mars 2026 (migration M1 → Beelink S12 + UFW/Fail2ban)
+**Version architecture:** 2.1 (2 machines EXTRANET/INTRANET)
 
 ---
 
