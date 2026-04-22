@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.0] - 2026-04-22
+
+### Ajout Machine #3 ZimaOS NAS + LXC Vaultwarden
+
+#### Added
+- **Machine #3 ZimaOS** déployée sur LAN (192.168.1.0/24)
+  - Stockage : nvme 238.5 GB (OS + /DATA 226 GB) + HDD 465.8 GB (btrfs, /DATA/.media)
+  - Services actifs : NFS, Samba, ZeroTier, rclone, qBittorrent
+  - Services installés (config en cours) : Home Assistant, Pi-hole, Poste.io
+- **LXC 100 `vaultwarden`** créé sur pve-extranet — configuration en cours
+- Architecture diagramme mis à jour : 3 machines
+
+#### Changed
+- README version 3.0 — 3 machines EXTRANET/INTRANET/NAS
+- Section "Stockage ZFS Machine #1" retirée (Beelink S12 = local-lvm uniquement, pas de ZFS)
+
+---
+
 ## [Unreleased] - 2026-03-20
 
 ### Audit Infrastructure Complet

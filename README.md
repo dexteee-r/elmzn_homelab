@@ -11,9 +11,9 @@
 
 ## 📊 Vue d'Ensemble
 
-**Type :** Homelab 2 machines (EXTRANET/INTRANET séparés)  
+**Type :** Homelab 3 machines (EXTRANET / INTRANET / NAS ZimaOS)  
 **Objectif :** Stockage photos/fichiers famille + VMs laboratoire + apprentissage DevOps  
-**Stack :** Proxmox VE + Debian + Docker Compose + ZFS  
+**Stack :** Proxmox VE + Debian + Docker Compose + ZFS + ZimaOS  
 **Sécurité :** Architecture DMZ multi-couches
 
 ### 🎯 Cas d'Usage Principaux
@@ -22,9 +22,14 @@
 - ✅ **Partage fichiers** (Nextcloud - non déployé, prévu)
 - ✅ **VMs laboratoire** (Debian test) - apprentissage
 - ✅ **Monitoring** (Prometheus + Grafana)
-- ⚠️ **Accès distant** (OpenVPN - inactif au 2026-03-20)
+- ⚠️ **Accès distant** (OpenVPN - inactif)
 - ✅ **Reverse proxy SSL** (Nginx Proxy Manager)
 - ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
+- ✅ **NAS domestique** (ZimaOS — SMB, NFS, rclone, ZeroTier)
+- 🔄 **Domotique** (Home Assistant — installé, config en cours)
+- 🔄 **DNS ad-blocker** (Pi-hole — installé, config en cours)
+- 🔄 **Mail server** (Poste.io — installé, config en cours)
+- 🔄 **Gestionnaire mots de passe** (Vaultwarden — LXC créé, config en cours)
 
 ---
 
@@ -36,24 +41,28 @@ Internet (WAN)
     ↓
 Box Internet (192.168.1.1)
 ├─ Port forwarding :
-│  ├─ 80/443 → Machine #1 (prévu)
-│  └─ 1194/udp → Machine #1 (OpenVPN)
+│  ├─ 80/443 → Machine #1 (vm-extranet)
+│  └─ 1194/udp → Machine #1 (OpenVPN — inactif)
 │
 └─ LAN (192.168.1.0/24)
    │
    ├─ Machine #1 : EXTRANET (DMZ) — Beelink S12, PVE 9.1
-   │  ├─ Proxmox host    : 192.168.1.100
-   │  ├─ VM-EXTRANET (101): 192.168.1.111
+   │  ├─ Proxmox host        : 192.168.1.100
+   │  ├─ VM-EXTRANET (101)   : 192.168.1.111
    │  │   └─ Services : NPM, UFW, fail2ban
-   │  │   ⚠️  OpenVPN inactif — ddclient inactif (vérifier)
-   │  └─ LXC lxc-web (102) : 192.168.1.112
+   │  ├─ LXC lxc-web (102)   : 192.168.1.112
+   │  └─ LXC vaultwarden (100): en cours de config
    │
-   └─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
-      ├─ Proxmox host        : 192.168.1.200
-      ├─ VM-INTRANET (101)   : 192.168.1.201
-      │   └─ Services : NPM, Immich, Grafana, Prometheus, node_exporter
-      └─ LXC minecraft-cobblemon (200) : 192.168.1.202
-          └─ Serveurs : cobbleverse★ (Fabric), cobblemon-academy (Fabric), demon-slayer (Forge)
+   ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
+   │  ├─ Proxmox host        : 192.168.1.200
+   │  ├─ VM-INTRANET (101)   : 192.168.1.201
+   │  │   └─ Services : NPM, Immich, Grafana, Prometheus, node_exporter
+   │  └─ LXC minecraft-cobblemon (200) : 192.168.1.202
+   │      └─ Serveurs : cobbleverse★ (Fabric), cobblemon-academy (Fabric), demon-slayer (Forge)
+   │
+   └─ Machine #3 : NAS — ZimaOS (ZIMA-CUBE ou similaire)
+      └─ Services : NFS, Samba, ZeroTier, rclone, qBittorrent
+          + En config : Home Assistant, Pi-hole, Poste.io
 ```
 
 **Principe :** Machine #2 **JAMAIS** exposée directement à Internet.
@@ -108,8 +117,22 @@ Box Internet (192.168.1.1)
 | **Nginx Proxy Manager** | 80, 81, 443 | Reverse proxy public + SSL |
 | **UFW** | — | Firewall actif (SSH LAN only, HTTP/HTTPS open) |
 | **fail2ban** | — | Protection bruteforce (SSH + Nginx) |
+| **Vaultwarden** | — | 🔄 LXC créé, configuration en cours |
 | **OpenVPN** | — | ⚠️ Inactif |
 | **ddclient** | — | ⚠️ Inactif |
+
+### **Machine #3 : NAS ZimaOS**
+
+| Service | Port | Description |
+|---------|------|-------------|
+| **NFS** | 2049 | Export volumes vers vm-intranet |
+| **Samba** | 445 | Partage réseau Windows/Mac |
+| **ZeroTier** | — | VPN mesh pour accès distant |
+| **rclone** | — | Sync/backup cloud |
+| **qBittorrent** | — | Téléchargements (ghcr.io/hotio) |
+| **Home Assistant** | — | 🔄 Installé, config en cours |
+| **Pi-hole** | — | 🔄 Installé, config en cours |
+| **Poste.io** | — | 🔄 Mail server, config en cours |
 
 ### **LXC Minecraft (Machine #2)**
 
@@ -134,16 +157,16 @@ Profils gérés par `mc-switch` :
 | `data-pool/backups` | 512 GB | 0 | `/mnt/data-pool/backups` (NFS → vmIntranet) |
 | `data-pool/media` | 512 GB | 0 | `/mnt/data-pool/media` (NFS → vmIntranet) |
 
-### **Stockage ZFS — Machine #1**
+### **Stockage ZimaOS (Machine #3)**
 
-| Pool | Taille | Datasets |
-|------|--------|----------|
-| `tank-hdd` | 464 GB | backups / logs / media / photos |
-| `tank-ssd` | 14.5 GB | appdata / postgres |
+| Disque | Taille | FS | Rôle |
+|--------|--------|----|------|
+| nvme0n1 | 238.5 GB | ext4 | OS ZimaOS + /DATA (226 GB) |
+| sda (HDD) | 465.8 GB | btrfs | `/DATA/.media/HDD-500GB` |
 
-**Partage réseau:**
-- **NFS:** Accessible depuis VMs Proxmox (192.168.1.0/24)
-- **Samba:** Accessible depuis Windows/Mac (`\\192.168.1.200`)
+**Partage réseau depuis ZimaOS :**
+- **NFS / Samba :** Accessible depuis LAN (192.168.1.0/24)
+- **ZeroTier :** Accès distant VPN mesh
 
 ---
 
@@ -437,18 +460,23 @@ restic restore latest --target /restore --tag photos
 - [x] Immich fonctionnel avec uploads
 - [x] Migration Machine #1 Dell OptiPlex 7040 → Beelink S12 (2026-03-21)
 - [x] UFW + Fail2ban opérationnels sur vm-extranet (2026-03-22)
+- [x] Machine #3 ZimaOS déployée — NAS + NFS/Samba/ZeroTier opérationnels (2026-04-22)
+- [x] LXC Vaultwarden (100) créé sur pve-extranet (2026-04-22)
 
 ### 🔄 En Cours
 
-- [ ] Backups automatisés
-- [ ] Tester elmzn.be depuis Internet (4G)
+- [ ] Backups automatisés (Restic)
+- [ ] Vaultwarden — configuration et mise en production
+- [ ] Home Assistant — configuration domotique
+- [ ] Pi-hole — configuration DNS ad-blocker
+- [ ] Poste.io — configuration mail server
 
 ### 📅 Prochaines Étapes
 
 - [ ] Nextcloud déploiement
-- [ ] Vaultwarden (gestionnaire mots de passe)
+- [ ] OpenVPN / accès distant
 - [ ] Uptime Kuma (monitoring uptime)
-- [ ] Pi-hole / AdGuard Home (DNS ad-blocker)
+- [ ] ddclient DDNS automatisé
 
 ---
 
@@ -490,8 +518,8 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 22 mars 2026 (migration M1 → Beelink S12 + UFW/Fail2ban)
-**Version architecture:** 2.1 (2 machines EXTRANET/INTRANET)
+**Dernière mise à jour:** 22 avril 2026 (ajout Machine #3 ZimaOS + LXC Vaultwarden)
+**Version architecture:** 3.0 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---
 
