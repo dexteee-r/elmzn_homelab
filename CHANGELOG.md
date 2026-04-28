@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.0] - 2026-04-28
+
+### Déploiement web Next.js — portfolio.elmzn.be
+
+#### Added
+- **`portfolio.elmzn.be`** déployé en production sur lxc-web
+  - Stack : Next.js SSR, mode `output: 'standalone'`
+  - Process manager : PM2 (`portfolio` — port 3001)
+  - Chemin : `/var/www/school_portfolio/mm-elmazani-portfolio/`
+- **Node.js 20 LTS** installé sur lxc-web (192.168.1.112)
+- **PM2** installé globalement sur lxc-web
+- Proxy host NPM `portfolio.elmzn.be` → `192.168.1.112:80` + SSL Let's Encrypt
+- Virtual host Nginx `portfolio.elmzn.be` → reverse proxy `localhost:3001`
+- `docs/web-server-doc-v2.docx` — documentation web server mise à jour (section 5 Next.js complète : RAM, rsync, env vars, standalone, PM2)
+
+#### Changed
+- RAM lxc-web augmentée : 512 MB → **1536 MB** (nécessaire pour le build Next.js)
+
+---
+
 ## [3.0.0] - 2026-04-22
 
 ### Ajout Machine #3 ZimaOS NAS + LXC Vaultwarden

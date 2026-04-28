@@ -20,6 +20,7 @@ logs/
 Thumbs.db
 *.swp
 *~
+*.lnk
 
 # IDE
 .vscode/

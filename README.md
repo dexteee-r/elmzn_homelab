@@ -24,6 +24,7 @@
 - ✅ **Monitoring** (Prometheus + Grafana)
 - ⚠️ **Accès distant** (OpenVPN - inactif)
 - ✅ **Reverse proxy SSL** (Nginx Proxy Manager)
+- ✅ **Hébergement web** (lxc-web — site statique `elmzn.be` + portfolio Next.js `portfolio.elmzn.be`)
 - ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
 - ✅ **NAS domestique** (ZimaOS — SMB, NFS, rclone, ZeroTier)
 - 🔄 **Domotique** (Home Assistant — installé, config en cours)
@@ -51,6 +52,8 @@ Box Internet (192.168.1.1)
    │  ├─ VM-EXTRANET (101)   : 192.168.1.111
    │  │   └─ Services : NPM, UFW, fail2ban
    │  ├─ LXC lxc-web (102)   : 192.168.1.112
+   │  │   ├─ elmzn.be (HTML statique)
+   │  │   └─ portfolio.elmzn.be (Next.js SSR — PM2 :3001)
    │  └─ LXC vaultwarden (100): en cours de config
    │
    ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
@@ -117,6 +120,8 @@ Box Internet (192.168.1.1)
 | **Nginx Proxy Manager** | 80, 81, 443 | Reverse proxy public + SSL |
 | **UFW** | — | Firewall actif (SSH LAN only, HTTP/HTTPS open) |
 | **fail2ban** | — | Protection bruteforce (SSH + Nginx) |
+| **lxc-web — elmzn.be** | 80 | Site statique HTML/CSS/JS |
+| **lxc-web — portfolio.elmzn.be** | 3001 (PM2) | Portfolio Next.js SSR (standalone) ✅ |
 | **Vaultwarden** | — | 🔄 LXC créé, configuration en cours |
 | **OpenVPN** | — | ⚠️ Inactif |
 | **ddclient** | — | ⚠️ Inactif |
@@ -462,6 +467,8 @@ restic restore latest --target /restore --tag photos
 - [x] UFW + Fail2ban opérationnels sur vm-extranet (2026-03-22)
 - [x] Machine #3 ZimaOS déployée — NAS + NFS/Samba/ZeroTier opérationnels (2026-04-22)
 - [x] LXC Vaultwarden (100) créé sur pve-extranet (2026-04-22)
+- [x] Node.js 20 LTS + PM2 installés sur lxc-web (2026-04-28)
+- [x] `portfolio.elmzn.be` déployé en production — Next.js SSR standalone (2026-04-28)
 
 ### 🔄 En Cours
 
@@ -518,8 +525,8 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 22 avril 2026 (ajout Machine #3 ZimaOS + LXC Vaultwarden)
-**Version architecture:** 3.0 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
+**Dernière mise à jour:** 28 avril 2026 (déploiement portfolio.elmzn.be — Next.js SSR)
+**Version architecture:** 3.1 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---
 
