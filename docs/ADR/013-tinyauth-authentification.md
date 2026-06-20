@@ -286,8 +286,7 @@ nano /mnt/appdata/tinyauth/config.yml
 ---
 
 ## Décision prise par
-- Markus (propriétaire projet, préférence utilisateur)
-- Claude (Anthropic AI assistant, analyse comparative)
+- Markus (propriétaire projet)
 
 ## Date
 11 novembre 2025

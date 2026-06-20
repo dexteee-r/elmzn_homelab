@@ -9,6 +9,20 @@
 
 ---
 
+## 🚀 Commence ici
+
+Tu veux **reproduire** ce homelab ? Suis les **tutos pas à pas** :
+
+> 👉 **[docs/tutos/](docs/tutos/README.md)** — guides reproductibles (le *comment*)
+
+| Tuto | Ce que tu obtiens |
+|------|-------------------|
+| [VPN WireGuard (subnet-router)](docs/tutos/vpn-wireguard-subnet-router.md) | Accès à tout le LAN homelab depuis l'extérieur |
+
+Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README = la **vue d'ensemble**.
+
+---
+
 ## 📊 Vue d'Ensemble
 
 **Type :** Homelab 3 machines (EXTRANET / INTRANET / NAS ZimaOS)  
