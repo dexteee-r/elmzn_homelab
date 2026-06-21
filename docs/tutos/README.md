@@ -10,11 +10,11 @@ Cette section regroupe les **tutoriels** du homelab : on les **suit** pour repro
 
 | Ordre | Tuto | Niveau | Ce que tu obtiens |
 |-------|------|--------|-------------------|
-| 1 | [VPN WireGuard (subnet-router)](vpn-wireguard-subnet-router.md) | Intermédiaire | Accès à tout le LAN homelab depuis l'extérieur |
-| 2 | [Serveur Minecraft (mc-switch)](serveur-minecraft.md) | Intermédiaire | Serveur Minecraft multi-modpacks, bascule en 1 commande |
-| 3 | [NAS ZimaOS](nas-zimaos.md) | Débutant | NAS domestique : partages SMB/NFS + apps |
-| — | _Setup Proxmox (à convertir depuis `../SETUP-MACHINE1.md`)_ | — | _à venir_ |
-| — | _Déploiement web (à convertir depuis `web-server-doc-v2.pdf`)_ | — | _à venir_ |
+| 1 | [Installer Proxmox VE](installer-proxmox.md) | Intermédiaire | Hôte Proxmox + pool ZFS + NFS + 1ère VM Debian |
+| 2 | [VPN WireGuard (subnet-router)](vpn-wireguard-subnet-router.md) | Intermédiaire | Accès à tout le LAN homelab depuis l'extérieur |
+| 3 | [Serveur Minecraft (mc-switch)](serveur-minecraft.md) | Intermédiaire | Serveur Minecraft multi-modpacks, bascule en 1 commande |
+| 4 | [NAS ZimaOS](nas-zimaos.md) | Débutant | NAS domestique : partages SMB/NFS + apps |
+| 5 | [Serveur web (Nginx + NPM)](serveur-web.md) | Intermédiaire | Héberger plusieurs sites (statique/React/Next.js) en HTTPS |
 
 ---
 
