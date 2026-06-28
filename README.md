@@ -39,6 +39,7 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ⚠️ **Accès distant** (OpenVPN - inactif)
 - ✅ **Reverse proxy SSL** (Nginx Proxy Manager)
 - ✅ **Hébergement web** (lxc-web — site statique `elmzn.be` + portfolio Next.js `portfolio.elmzn.be`)
+- ✅ **Web app auto-hébergée** (`watchlist.elmzn.be` — *Series Tracker* : React/Vite + FastAPI + PostgreSQL, auto-déployée via runner GitHub Actions)
 - ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
 - ✅ **NAS domestique** (ZimaOS — SMB, NFS, rclone, ZeroTier)
 - 🔄 **Domotique** (Home Assistant — installé, config en cours)
@@ -68,6 +69,8 @@ Box Internet (192.168.1.1)
    │  ├─ LXC lxc-web (102)   : 192.168.1.112
    │  │   ├─ elmzn.be (HTML statique)
    │  │   └─ portfolio.elmzn.be (Next.js SSR — PM2 :3001)
+   │  ├─ LXC watchlist (105) : 192.168.1.115
+   │  │   └─ watchlist.elmzn.be (Series Tracker — Docker : nginx+SPA / FastAPI / PostgreSQL)
    │  └─ LXC vaultwarden (100): en cours de config
    │
    ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
@@ -136,6 +139,7 @@ Box Internet (192.168.1.1)
 | **fail2ban** | — | Protection bruteforce (SSH + Nginx) |
 | **lxc-web — elmzn.be** | 80 | Site statique HTML/CSS/JS |
 | **lxc-web — portfolio.elmzn.be** | 3001 (PM2) | Portfolio Next.js SSR (standalone) ✅ |
+| **watchlist.elmzn.be** | 80 (LXC 105) | *Series Tracker* — web app Docker (nginx+React / FastAPI / PostgreSQL), auto-deploy GitHub Actions ✅ |
 | **Vaultwarden** | — | 🔄 LXC créé, configuration en cours |
 | **OpenVPN** | — | ⚠️ Inactif |
 | **ddclient** | — | ⚠️ Inactif |
@@ -483,6 +487,7 @@ restic restore latest --target /restore --tag photos
 - [x] LXC Vaultwarden (100) créé sur pve-extranet (2026-04-22)
 - [x] Node.js 20 LTS + PM2 installés sur lxc-web (2026-04-28)
 - [x] `portfolio.elmzn.be` déployé en production — Next.js SSR standalone (2026-04-28)
+- [x] `watchlist.elmzn.be` déployé — web app *Series Tracker* (Docker, LXC 105 sur pve-extranet) + CI/CD auto-deploy via runner GitHub Actions self-hosted (2026-06-28)
 
 ### 🔄 En Cours
 
@@ -539,7 +544,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 28 avril 2026 (déploiement portfolio.elmzn.be — Next.js SSR)
+**Dernière mise à jour:** 28 juin 2026 (déploiement watchlist.elmzn.be — web app Series Tracker)
 **Version architecture:** 3.1 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---
