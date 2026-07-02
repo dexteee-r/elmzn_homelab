@@ -38,7 +38,7 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ✅ **Monitoring** (Prometheus + Grafana)
 - ⚠️ **Accès distant** (OpenVPN - inactif)
 - ✅ **Reverse proxy SSL** (Nginx Proxy Manager)
-- ✅ **Hébergement web** (lxc-web — site statique `elmzn.be` + portfolio Next.js `portfolio.elmzn.be`)
+- ✅ **Hébergement web** (lxc-web — portail homelab `elmzn.be` (LAN only) + portfolio Next.js `portfolio.elmzn.be`)
 - ✅ **Web app auto-hébergée** (`watchlist.elmzn.be` — *Series Tracker* : React/Vite + FastAPI + PostgreSQL, auto-déployée via runner GitHub Actions)
 - ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
 - ✅ **NAS domestique** (ZimaOS — SMB, NFS, rclone, ZeroTier)
@@ -67,7 +67,7 @@ Box Internet (192.168.1.1)
    │  ├─ VM-EXTRANET (101)   : 192.168.1.111
    │  │   └─ Services : NPM, UFW, fail2ban
    │  ├─ LXC lxc-web (102)   : 192.168.1.112
-   │  │   ├─ elmzn.be (HTML statique)
+   │  │   ├─ elmzn.be (portail homelab statique — accès LAN uniquement)
    │  │   └─ portfolio.elmzn.be (Next.js SSR — PM2 :3001)
    │  ├─ LXC watchlist (105) : 192.168.1.115
    │  │   └─ watchlist.elmzn.be (Series Tracker — Docker : nginx+SPA / FastAPI / PostgreSQL)
@@ -137,7 +137,7 @@ Box Internet (192.168.1.1)
 | **Nginx Proxy Manager** | 80, 81, 443 | Reverse proxy public + SSL |
 | **UFW** | — | Firewall actif (SSH LAN only, HTTP/HTTPS open) |
 | **fail2ban** | — | Protection bruteforce (SSH + Nginx) |
-| **lxc-web — elmzn.be** | 80 | Site statique HTML/CSS/JS |
+| **lxc-web — elmzn.be** | 80 | Portail homelab statique — LAN only (Access List NPM), déploiement par `git push` (bare repo + hook post-receive) |
 | **lxc-web — portfolio.elmzn.be** | 3001 (PM2) | Portfolio Next.js SSR (standalone) ✅ |
 | **watchlist.elmzn.be** | 80 (LXC 105) | *Series Tracker* — web app Docker (nginx+React / FastAPI / PostgreSQL), auto-deploy GitHub Actions ✅ |
 | **Vaultwarden** | — | 🔄 LXC créé, configuration en cours |
@@ -433,7 +433,7 @@ restic restore latest --target /restore --tag photos
 1. **Box Firewall** - Ports 80/443 UNIQUEMENT vers Machine #1
 2. **UFW** - SSH LAN only, HTTP/HTTPS ouvert, tout le reste bloqué (vm-extranet ✅)
 3. **Fail2ban** - SSH ban 24h, Nginx auth/rate-limit ban 1h (vm-extranet ✅)
-4. **NPM Access Lists** - Grafana/Prometheus = LAN uniquement
+4. **NPM Access Lists** - Grafana/Prometheus = LAN uniquement ; `elmzn.be` = LAN uniquement (403 pour le public)
 5. **Application Auth** - Comptes + passwords forts
 
 > ⚠️ OpenVPN inactif sur M1 — accès VPN non opérationnel
@@ -488,6 +488,9 @@ restic restore latest --target /restore --tag photos
 - [x] Node.js 20 LTS + PM2 installés sur lxc-web (2026-04-28)
 - [x] `portfolio.elmzn.be` déployé en production — Next.js SSR standalone (2026-04-28)
 - [x] `watchlist.elmzn.be` déployé — web app *Series Tracker* (Docker, LXC 105 sur pve-extranet) + CI/CD auto-deploy via runner GitHub Actions self-hosted (2026-06-28)
+- [x] `elmzn.be` passé en accès LAN uniquement (Access List NPM) et reconverti en **portail homelab** — liens vers tous les services (2026-07-02)
+- [x] Déploiement auto du portail par `git push` (repo bare + hook post-receive sur lxc-web) (2026-07-02)
+- [x] Pages d'erreur 403/404/5xx communes — snippet nginx sur lxc-web (tous les vhosts) + hook custom NPM (tous les proxy hosts) (2026-07-03)
 
 ### 🔄 En Cours
 
@@ -544,7 +547,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 28 juin 2026 (déploiement watchlist.elmzn.be — web app Series Tracker)
+**Dernière mise à jour:** 3 juillet 2026 (elmzn.be → portail homelab LAN-only, déploiement git push, pages d'erreur communes)
 **Version architecture:** 3.1 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---
