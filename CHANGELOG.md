@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.1] - 2026-07-30
+
+### Mise à jour Immich — migration VectorChord
+
+#### Changed
+- **Immich** mis à jour `v2.3.1` → `v3.1.0` sur vm-intranet (192.168.1.201)
+- **PostgreSQL** (service `database`, vm-intranet) : image `tensorchord/pgvecto-rs:pg14-v0.2.0` → `ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0`
+- Reindexation automatique des index `clip_index` et `face_index` (recherche par similarité, reconnaissance faciale) déclenchée au redémarrage du service
+
+#### Fixed
+- Extension vectorielle Postgres dépréciée (`pgvecto.rs`) supprimée avant qu'Immich v3 n'en abandonne le support
+
+---
+
 ## [3.1.0] - 2026-04-28
 
 ### Déploiement web Next.js — portfolio.elmzn.be
