@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.0] - 2026-08-05
+
+### Exposition publique de n8n + endpoint media statique
+
+#### Added
+- **n8n** exposé publiquement sur 2 sous-domaines dédiés (reverse proxy NPM + Let's Encrypt) :
+  - `n8n.elmzn.be` — éditeur + API REST, accès restreint LAN/VPN (Access List NPM)
+  - `hooks.elmzn.be` — webhooks uniquement (`/webhook/*`, `/webhook-test/*`), public, pour intégrations externes
+- **Endpoint media statique** `media.elmzn.be` — service nginx dédié (LXC 106, port 8081), lecture seule, sans listing de répertoire
+  - Purge automatique horaire des fichiers de plus de 48h (cron)
+  - Écriture par n8n via volume partagé sur le même LXC
+- `N8N_DEFAULT_BINARY_DATA_MODE=filesystem` (au lieu du mode mémoire par défaut) pour le traitement de fichiers volumineux
+
+#### Changed
+- n8n : `N8N_PROTOCOL=https`, `WEBHOOK_URL` et `N8N_EDITOR_BASE_URL` sur des domaines dédiés, `N8N_PROXY_HOPS=1`
+
+---
+
 ## [3.2.0] - 2026-08-05
 
 ### Déploiement n8n — automatisation self-hosted
