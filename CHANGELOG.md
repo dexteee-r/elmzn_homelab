@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.4.0] - 2026-08-05
+
+### LLM local (Ollama) pour les workflows n8n
+
+#### Added
+- **Ollama** ajouté à la stack Docker du LXC 106 (image `ollama/ollama:latest`), modèle **`qwen2.5:7b`** en inférence CPU
+  - **Aucun port publié** : le service n'est joignable que par n8n via le réseau interne Compose (`http://ollama:11434`) — évite d'exposer une API d'inférence non authentifiée sur le LAN
+  - Volume nommé `ollama_models` pour la persistance des modèles
+  - Objectif : génération de contenu sans dépendance à une API tierce (pas de transfert de données hors infrastructure, coût marginal nul)
+
+#### Changed
+- **LXC 106** redimensionné : RAM `2 Go → 8 Go`, cœurs `2 → 4`, disque `16 Go → 32 Go` (opérations à chaud, sans interruption de service)
+
+#### Notes
+- Performances mesurées (Intel N95, CPU seul) : ~17 s de chargement à froid, **~101 s pour 400 tokens** (4,4 tokens/s), pic RAM ~5 Go
+- Timeout HTTP à prévoir côté n8n : **300 s** (le modèle est déchargé après 5 min d'inactivité, chaque exécution repart donc à froid)
+- L'image Ollama pèse **6,3 Go** (bibliothèques GPU incluses même en usage CPU) — à prendre en compte dans le dimensionnement disque
+
+---
+
 ## [3.3.0] - 2026-08-05
 
 ### Exposition publique de n8n + endpoint media statique

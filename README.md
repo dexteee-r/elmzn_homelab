@@ -41,6 +41,7 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ✅ **Hébergement web** (lxc-web — portail homelab `elmzn.be` (LAN only) + portfolio Next.js `portfolio.elmzn.be`)
 - ✅ **Web app auto-hébergée** (`watchlist.elmzn.be` — *Series Tracker* : React/Vite + FastAPI + PostgreSQL, auto-déployée via runner GitHub Actions)
 - ✅ **Automatisation** (n8n — LXC dédié Docker, éditeur LAN/VPN uniquement, webhooks publics via sous-domaine dédié)
+- ✅ **LLM auto-hébergé** (Ollama + qwen2.5:7b — inférence CPU, réseau interne uniquement, aucune API tierce)
 - ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
 - ✅ **NAS domestique** (ZimaOS — SMB, NFS, rclone, ZeroTier)
 - 🔄 **Domotique** (Home Assistant — installé, config en cours)
@@ -72,10 +73,11 @@ Box Internet (192.168.1.1)
    │  │   └─ portfolio.elmzn.be (Next.js SSR — PM2 :3001)
    │  ├─ LXC watchlist (105) : 192.168.1.115
    │  │   └─ watchlist.elmzn.be (Series Tracker — Docker : nginx+SPA / FastAPI / PostgreSQL)
-   │  ├─ LXC n8n (106)       : 192.168.1.116
+   │  ├─ LXC n8n (106)       : 192.168.1.116 — 8 Go RAM, 4 cœurs, 32 Go
    │  │   ├─ Automatisation self-hosted — Docker, port 5678
    │  │   │   n8n.elmzn.be (éditeur, LAN/VPN) + hooks.elmzn.be (webhooks, public)
-   │  │   └─ media.elmzn.be — fichiers statiques (port 8081, lecture seule)
+   │  │   ├─ media.elmzn.be — fichiers statiques (port 8081, lecture seule)
+   │  │   └─ Ollama (qwen2.5:7b) — LLM local CPU, réseau interne Compose, aucun port publié
    │  └─ LXC vaultwarden (100): en cours de config
    │
    ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
@@ -148,6 +150,7 @@ Box Internet (192.168.1.1)
 | **n8n** — `n8n.elmzn.be` | 5678 (LXC 106) | Automatisation workflows — Docker, éditeur/API restreints LAN/VPN (Access List NPM) ✅ |
 | **n8n** — `hooks.elmzn.be` | 5678 (LXC 106) | Webhooks n8n uniquement (`/webhook/*`) — public, pour intégrations externes ✅ |
 | **n8n** — `media.elmzn.be` | 8081 (LXC 106) | Fichiers statiques temporaires — lecture seule, purge auto 48h ✅ |
+| **Ollama** | 11434 (interne, LXC 106) | LLM local `qwen2.5:7b` — inférence CPU, joignable uniquement par n8n (réseau Compose), aucun port publié ✅ |
 | **Vaultwarden** | — | 🔄 LXC créé, configuration en cours |
 | **OpenVPN** | — | ⚠️ Inactif |
 | **ddclient** | — | ⚠️ Inactif |
@@ -501,6 +504,7 @@ restic restore latest --target /restore --tag photos
 - [x] Pages d'erreur 403/404/5xx communes — snippet nginx sur lxc-web (tous les vhosts) + hook custom NPM (tous les proxy hosts) (2026-07-03)
 - [x] n8n déployé — automatisation self-hosted (Docker, LXC 106 sur pve-extranet), accès LAN uniquement (2026-08-05)
 - [x] n8n exposé publiquement — `n8n.elmzn.be` (éditeur, LAN/VPN) + `hooks.elmzn.be` (webhooks, public) + `media.elmzn.be` (fichiers statiques, lecture seule, purge 48h) (2026-08-05)
+- [x] LLM local Ollama (`qwen2.5:7b`, inférence CPU) ajouté à la stack n8n — réseau interne uniquement, LXC 106 porté à 8 Go / 4 cœurs / 32 Go (2026-08-05)
 
 ### 🔄 En Cours
 
@@ -557,7 +561,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 5 août 2026 (n8n exposé publiquement — éditeur LAN/VPN, webhooks publics, endpoint media)
+**Dernière mise à jour:** 5 août 2026 (LLM local Ollama ajouté à la stack n8n — inférence CPU, réseau interne)
 **Version architecture:** 3.1 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---
