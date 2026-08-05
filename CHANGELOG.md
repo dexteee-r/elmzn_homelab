@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.0] - 2026-08-05
+
+### Déploiement n8n — automatisation self-hosted
+
+#### Added
+- **n8n** déployé sur `pve-extranet` (Beelink) : LXC 106 dédié, Docker (image `n8nio/n8n:latest`), port 5678
+  - LXC non-privilégié, `nesting=1,keyctl=1`, 2 Go RAM / 2 cœurs / 16 Go disque, IP statique `192.168.1.116`
+  - Volume Docker nommé pour la persistance des workflows/credentials (`/home/node/.n8n`)
+  - Licence Community Edition activée
+- Accès **LAN uniquement** pour l'instant (pas d'exposition VPN ni sous-domaine public)
+
+---
+
 ## [3.1.1] - 2026-07-30
 
 ### Mise à jour Immich — migration VectorChord

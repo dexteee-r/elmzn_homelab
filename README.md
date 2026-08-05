@@ -40,6 +40,7 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ✅ **Reverse proxy SSL** (Nginx Proxy Manager)
 - ✅ **Hébergement web** (lxc-web — portail homelab `elmzn.be` (LAN only) + portfolio Next.js `portfolio.elmzn.be`)
 - ✅ **Web app auto-hébergée** (`watchlist.elmzn.be` — *Series Tracker* : React/Vite + FastAPI + PostgreSQL, auto-déployée via runner GitHub Actions)
+- ✅ **Automatisation** (n8n — LXC dédié Docker, accès LAN uniquement)
 - ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
 - ✅ **NAS domestique** (ZimaOS — SMB, NFS, rclone, ZeroTier)
 - 🔄 **Domotique** (Home Assistant — installé, config en cours)
@@ -71,6 +72,8 @@ Box Internet (192.168.1.1)
    │  │   └─ portfolio.elmzn.be (Next.js SSR — PM2 :3001)
    │  ├─ LXC watchlist (105) : 192.168.1.115
    │  │   └─ watchlist.elmzn.be (Series Tracker — Docker : nginx+SPA / FastAPI / PostgreSQL)
+   │  ├─ LXC n8n (106)       : 192.168.1.116
+   │  │   └─ Automatisation self-hosted — Docker, port 5678 (accès LAN uniquement)
    │  └─ LXC vaultwarden (100): en cours de config
    │
    ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
@@ -140,6 +143,7 @@ Box Internet (192.168.1.1)
 | **lxc-web — elmzn.be** | 80 | Portail homelab statique — LAN only (Access List NPM), déploiement par `git push` (bare repo + hook post-receive) |
 | **lxc-web — portfolio.elmzn.be** | 3001 (PM2) | Portfolio Next.js SSR (standalone) ✅ |
 | **watchlist.elmzn.be** | 80 (LXC 105) | *Series Tracker* — web app Docker (nginx+React / FastAPI / PostgreSQL), auto-deploy GitHub Actions ✅ |
+| **n8n** | 5678 (LXC 106) | Automatisation workflows — Docker, accès LAN uniquement ✅ |
 | **Vaultwarden** | — | 🔄 LXC créé, configuration en cours |
 | **OpenVPN** | — | ⚠️ Inactif |
 | **ddclient** | — | ⚠️ Inactif |
@@ -491,6 +495,7 @@ restic restore latest --target /restore --tag photos
 - [x] `elmzn.be` passé en accès LAN uniquement (Access List NPM) et reconverti en **portail homelab** — liens vers tous les services (2026-07-02)
 - [x] Déploiement auto du portail par `git push` (repo bare + hook post-receive sur lxc-web) (2026-07-02)
 - [x] Pages d'erreur 403/404/5xx communes — snippet nginx sur lxc-web (tous les vhosts) + hook custom NPM (tous les proxy hosts) (2026-07-03)
+- [x] n8n déployé — automatisation self-hosted (Docker, LXC 106 sur pve-extranet), accès LAN uniquement (2026-08-05)
 
 ### 🔄 En Cours
 
@@ -547,7 +552,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 3 juillet 2026 (elmzn.be → portail homelab LAN-only, déploiement git push, pages d'erreur communes)
+**Dernière mise à jour:** 5 août 2026 (déploiement n8n — automatisation self-hosted, LAN-only)
 **Version architecture:** 3.1 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---
