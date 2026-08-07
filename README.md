@@ -40,6 +40,7 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ✅ **Reverse proxy SSL** (Nginx Proxy Manager)
 - ✅ **Hébergement web** (lxc-web — portail homelab `elmzn.be` (LAN only) + portfolio Next.js `portfolio.elmzn.be`)
 - ✅ **Web app auto-hébergée** (`watchlist.elmzn.be` — *Series Tracker* : React/Vite + FastAPI + PostgreSQL, auto-déployée via runner GitHub Actions)
+- ✅ **Gestionnaire de collection de cartes** (`mytcg.elmzn.be` — *MyTCG* : React + FastAPI + SQLite, stack native, auto-déploiement pull-based)
 - ✅ **Automatisation** (n8n — LXC dédié Docker, éditeur LAN/VPN uniquement, webhooks publics via sous-domaine dédié)
 - ✅ **LLM auto-hébergé** (Ollama + qwen2.5:7b — inférence CPU, réseau interne uniquement, aucune API tierce)
 - ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
@@ -78,6 +79,8 @@ Box Internet (192.168.1.1)
    │  │   │   n8n.elmzn.be (éditeur, LAN/VPN) + hooks.elmzn.be (webhooks, public)
    │  │   ├─ media.elmzn.be — fichiers statiques (port 8081, lecture seule)
    │  │   └─ Ollama (qwen2.5:7b) — LLM local CPU, réseau interne Compose, aucun port publié
+   │  ├─ LXC mytcg (107)     : 192.168.1.117 — 4 Go RAM, 2 cœurs, 20 Go
+   │  │   └─ mytcg.elmzn.be (MyTCG — stack native : Nginx + FastAPI/uvicorn + SQLite)
    │  └─ LXC vaultwarden (100): en cours de config
    │
    ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
@@ -151,6 +154,7 @@ Box Internet (192.168.1.1)
 | **n8n** — `hooks.elmzn.be` | 5678 (LXC 106) | Webhooks n8n uniquement (`/webhook/*`) — public, pour intégrations externes ✅ |
 | **n8n** — `media.elmzn.be` | 8081 (LXC 106) | Fichiers statiques temporaires — lecture seule, purge auto 48h ✅ |
 | **Ollama** | 11434 (interne, LXC 106) | LLM local `qwen2.5:7b` — inférence CPU, joignable uniquement par n8n (réseau Compose), aucun port publié ✅ |
+| **mytcg.elmzn.be** | 80 (LXC 107) | *MyTCG* — gestionnaire de collection de cartes, stack native (Nginx + FastAPI/uvicorn + SQLite), auto-déploiement pull-based toutes les 5 min ✅ |
 | **Vaultwarden** | — | 🔄 LXC créé, configuration en cours |
 | **OpenVPN** | — | ⚠️ Inactif |
 | **ddclient** | — | ⚠️ Inactif |
@@ -505,6 +509,7 @@ restic restore latest --target /restore --tag photos
 - [x] n8n déployé — automatisation self-hosted (Docker, LXC 106 sur pve-extranet), accès LAN uniquement (2026-08-05)
 - [x] n8n exposé publiquement — `n8n.elmzn.be` (éditeur, LAN/VPN) + `hooks.elmzn.be` (webhooks, public) + `media.elmzn.be` (fichiers statiques, lecture seule, purge 48h) (2026-08-05)
 - [x] LLM local Ollama (`qwen2.5:7b`, inférence CPU) ajouté à la stack n8n — réseau interne uniquement, LXC 106 porté à 8 Go / 4 cœurs / 32 Go (2026-08-05)
+- [x] `mytcg.elmzn.be` déployé — *MyTCG* (stack native Nginx + FastAPI + SQLite, LXC 107 sur pve-extranet), auto-déploiement pull-based conditionné à la CI + backup nocturne de la base (2026-08-07)
 
 ### 🔄 En Cours
 
@@ -561,7 +566,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 5 août 2026 (LLM local Ollama ajouté à la stack n8n — inférence CPU, réseau interne)
+**Dernière mise à jour:** 7 août 2026 (MyTCG déployé sur LXC 107 — stack native, auto-déploiement pull-based)
 **Version architecture:** 3.1 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---

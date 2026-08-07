@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.0] - 2026-08-07
+
+### Déploiement MyTCG — gestionnaire de collection de cartes
+
+#### Added
+- **MyTCG** déployé sur `pve-extranet` (Beelink) : LXC 107 dédié, **stack native (sans Docker)** — uvicorn/FastAPI + Nginx + SQLite
+  - LXC non-privilégié, `nesting=1`, 4 Go RAM / 2 cœurs / 20 Go disque, IP statique `192.168.1.117`, Debian 13
+  - API en écoute sur `127.0.0.1:8000` (unit `mytcg-api`, hardening systemd), Nginx sert la SPA et les images en direct
+  - Données applicatives hors du checkout : `/var/lib/mytcg` (base SQLite + 2,5 Go d'images de cartes)
+- **`mytcg.elmzn.be`** exposé publiquement via NPM (CNAME OVH vers le DDNS, Let's Encrypt, Force SSL, HTTP/2)
+  - Nginx du LXC restreint aux seules requêtes du reverse proxy (`allow` NPM + loopback, `deny all`) → un accès direct par IP depuis le LAN renvoie **403**
+- **Déploiement automatique pull-based** (timer systemd, toutes les 5 minutes) : détecte un nouveau commit sur `main`, **n'agit que si la CI est verte**, puis backup → pull → dépendances → build front → tests → redémarrage de l'API
+- **Backup nocturne** de la base : `sqlite3 .backup` + gzip, rétention 30 jours (timer systemd)
+- Inscriptions fermées par défaut (**mode `invite`** — code d'invitation obligatoire, exception pour le premier compte)
+
+#### Notes
+- ⚠️ **`NoNewPrivileges=yes` et `sudo` sont incompatibles dans une unit systemd.** L'unit de déploiement portait ce flag alors que son script se termine par `sudo systemctl restart` : le déploiement réussissait **entièrement** (pull, build, tests) puis échouait sur le seul redémarrage — le nouveau code sur le disque, l'ancien processus toujours en service, et **aucun symptôme visible côté site**. Le piège ne se reproduit pas en lançant le script à la main (le flag n'est posé que par systemd). Corrigé par un drop-in `NoNewPrivileges=no`, le reste du durcissement conservé et la règle sudoers limitée à cette seule commande.
+- L'endpoint `/health` publie le **commit servi** : moyen le plus rapide de vérifier quelle version tourne réellement, sans ouvrir de session SSH.
+- Nginx : après installation d'un nouveau site, `systemctl reload` a laissé servir la page par défaut alors que `nginx -T` montrait bien la bonne configuration. **`restart` requis** — réflexe à garder quand la conf chargée et le comportement observé divergent.
+- Un dossier de déploiement préparé sous Windows arrive en **CRLF** : les scripts meurent sur `env: 'bash\r': No such file or directory`. Nettoyer avec `tr -d '\015'` (un `sed "s/\r$//"` passé à travers plusieurs couches de shell distant perd son `\r` en route et ne corrige rien).
+- Chaque nouveau sous-domaine doit être ajouté au fichier `hosts` du poste de travail, **vers le reverse proxy** — le hairpin NAT de la box ne permet pas de repasser par l'IP publique depuis le LAN.
+
+---
+
 ## [3.4.0] - 2026-08-05
 
 ### LLM local (Ollama) pour les workflows n8n
