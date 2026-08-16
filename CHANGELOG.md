@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nginx : après installation d'un nouveau site, `systemctl reload` a laissé servir la page par défaut alors que `nginx -T` montrait bien la bonne configuration. **`restart` requis** — réflexe à garder quand la conf chargée et le comportement observé divergent.
 - Un dossier de déploiement préparé sous Windows arrive en **CRLF** : les scripts meurent sur `env: 'bash\r': No such file or directory`. Nettoyer avec `tr -d '\015'` (un `sed "s/\r$//"` passé à travers plusieurs couches de shell distant perd son `\r` en route et ne corrige rien).
 - Chaque nouveau sous-domaine doit être ajouté au fichier `hosts` du poste de travail, **vers le reverse proxy** — le hairpin NAT de la box ne permet pas de repasser par l'IP publique depuis le LAN.
+- ⚠️ **Le code vit dans `/srv/mytcg`, pas `/opt/<app>` comme les autres services** (`watchlist`, `n8n`). Écart volontaire non corrigé : le dossier de déploiement fourni pour ce projet était écrit pour une autre infra et fixait déjà ses chemins sur `/srv`, repris tel quel. Sans conséquence pratique (les 4 units systemd, la conf Nginx et l'utilisateur système `mytcg` sont cohérents entre eux), mais à garder en tête si un service est un jour reprovisionné à partir de ce dossier de déploiement.
 
 ---
 
