@@ -154,7 +154,7 @@ Box Internet (192.168.1.1)
 | **n8n** — `hooks.elmzn.be` | 5678 (LXC 106) | Webhooks n8n uniquement (`/webhook/*`) — public, pour intégrations externes ✅ |
 | **n8n** — `media.elmzn.be` | 8081 (LXC 106) | Fichiers statiques temporaires — lecture seule, purge auto 48h ✅ |
 | **Ollama** | 11434 (interne, LXC 106) | LLM local `qwen2.5:7b` — inférence CPU, joignable uniquement par n8n (réseau Compose), aucun port publié ✅ |
-| **mytcg.elmzn.be** | 80 (LXC 107) | *MyTCG* — gestionnaire de collection de cartes, stack native (Nginx + FastAPI/uvicorn + SQLite), auto-déploiement pull-based toutes les 5 min ✅ — ⚠️ code dans `/srv/mytcg` (pas `/opt` comme les autres services, cf. Notes du CHANGELOG [3.5.0]) |
+| **mytcg.elmzn.be** | 80 (LXC 107) | *MyTCG* — gestionnaire de collection de cartes, stack native (Nginx + FastAPI/uvicorn + SQLite), auto-déploiement pull-based toutes les 5 min ✅ — code dans `/opt/mytcg` (aligné sur les autres services) |
 | **Vaultwarden** | — | 🔄 LXC créé, configuration en cours |
 | **OpenVPN** | — | ⚠️ Inactif |
 | **ddclient** | — | ⚠️ Inactif |
@@ -566,7 +566,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 7 août 2026 (MyTCG déployé sur LXC 107 — stack native, auto-déploiement pull-based)
+**Dernière mise à jour:** 6 septembre 2026 (MyTCG migré de `/srv` vers `/opt/mytcg`)
 **Version architecture:** 3.1 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---

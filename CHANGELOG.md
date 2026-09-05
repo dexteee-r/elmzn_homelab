@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.1] - 2026-09-06
+
+### MyTCG — migration `/srv/mytcg` → `/opt/mytcg`
+
+#### Changed
+- Le code de MyTCG (LXC 107) vit désormais dans `/opt/mytcg`, alignant enfin ce service sur la convention du reste de l'infra (`/opt/watchlist`, `/opt/n8n`). L'écart signalé dans les Notes du `[3.5.0]` est résolu.
+
+#### Notes
+- Les 4 units systemd (`mytcg-api`, `mytcg-autodeploy`, `mytcg-backup`, `mytcg-prices`) et la conf Nginx ont été repointées vers `/opt/mytcg`, l'utilisateur système `mytcg` a son `home` mis à jour (`/etc/passwd`), et le virtualenv Python a été **reconstruit** (son binaire `uvicorn` porte un shebang absolu — un simple déplacement de dossier l'aurait cassé).
+- Le dépôt applicatif `MyTGC` (units et conf Nginx sous `deploy/`) référence encore `/srv/mytcg` en dur. Plutôt que de corriger des scripts que le prochain `git reset --hard` du déploiement automatique aurait de toute façon écrasés, deux variables (`MYTCG_APP_DIR`, `MYTCG_WEB_DIR`) ont été ajoutées à `/etc/mytcg/mytcg.env` — hors du checkout, donc stables face aux redéploiements. `deploy.sh`/`autodeploy.sh` les lisaient déjà en priorité sur leur valeur par défaut.
+- Effet de bord attendu : le contrôle de dérive intégré à `deploy.sh` signalera désormais les 4 units comme « differs from the installed copy » à chaque déploiement, tant que les templates du dépôt ne sont pas mis à jour côté `MyTGC`. Non bloquant (avertissement seul), mais à corriger en amont pour faire taire le bruit.
+- Validé de bout en bout : `backup.sh` et `deploy.sh` rejoués manuellement depuis le nouvel emplacement (build, 213 tests front + suite pytest, redémarrage API, `/health` correct), puis **`pct reboot 107`** pour prouver que nginx, l'API et les 3 timers remontent seuls sans unit en échec — même rigueur que le bug de boot Nginx du 2026-08-15.
+
 ## [3.5.0] - 2026-08-07
 
 ### Déploiement MyTCG — gestionnaire de collection de cartes
