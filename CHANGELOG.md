@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.2] - 2026-09-11
+
+### MyTCG — cotes japonaises + resynchronisation du dépôt sur `/opt`
+
+#### Added
+- Rafraîchissement automatique des cotes de cartes **japonaises** (`mytcg-prices-jp.timer`, source yuyu-tei.jp), tous les 3 jours — même mécanisme que les cotes anglaises existantes (`mytcg-prices.timer`).
+
+#### Changed
+- Le dépôt applicatif `MyTGC` (units systemd, `deploy.sh`/`autodeploy.sh`, conf Nginx, README) référence désormais `/opt/mytcg` au lieu de `/srv/mytcg` — la dérive laissée ouverte par la migration du `[3.5.1]` (seule la machine avait été patchée à la main) est maintenant résolue à la source.
+- `mytcg-backup.service` durci : 7 directives systemd supplémentaires, dont `RestrictAddressFamilies=AF_UNIX` — plus strict que l'unit API, car ce job ne doit jamais ouvrir de connexion réseau.
+
+#### Notes
+- La nouvelle unit `mytcg-prices-jp` avait `/srv/mytcg` codé en dur **sans repli**, contrairement aux 4 units historiques qui lisent une variable d'environnement en priorité. Son premier lancement a échoué (binaire introuvable) — c'est ce qui a révélé que la dérive `/srv`→`/opt` n'avait jamais été reportée dans le dépôt.
+- Le durcissement du backup a été validé par un run réel, pas seulement « le service démarre » : le fichier produit a été vérifié avec `gzip -t` et `PRAGMA integrity_check`.
+
 ## [3.5.1] - 2026-09-06
 
 ### MyTCG — migration `/srv/mytcg` → `/opt/mytcg`
