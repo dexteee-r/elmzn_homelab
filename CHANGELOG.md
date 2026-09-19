@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.6.0] - 2026-09-19
+
+### Nouveau repo `linktree-host` — page link-in-bio (préparation)
+
+#### Added
+- Repo dédié créé : `github.com/dexteee-r/linktree-host` (public) — Node.js/Express + SQLite, page de liens auto-hébergée pour `links.elmzn.be`, prévue sur `vm-extranet` aux côtés de NPM (conteneur Docker, aucun port exposé sur le LAN, réseau Docker partagé avec NPM).
+
+#### Notes
+- Suit le pattern déjà établi pour watchlist/n8n/MyTCG : le code applicatif vit dans son propre repo, ce dépôt ne garde que le CHANGELOG + le README.
+- Corrections apportées avant publication du repo : image Docker passée d'Alpine à `node:20-slim` (le module natif `better-sqlite3` a des binaires précompilés surtout pour glibc, Alpine/musl risquait de forcer une compilation à la volée sans toolchain dans l'image) ; déploiement par défaut basculé sur `root@192.168.1.111` plutôt qu'un compte `webadmin` non confirmé sur cette VM (seul `webadmin@lxc-web/.112` est vérifié) ; `NPM_NETWORK_NAME` rendu obligatoire dans le `docker-compose.yml` pour éviter un déploiement silencieux sur le mauvais réseau Docker (l'ancien fallback `vm-extranet_default` n'était qu'une supposition, jamais vérifiée).
+- Déploiement effectif sur `vm-extranet` (vérification du réseau Docker NPM, `.env` serveur, `docker compose up`) et création du Proxy Host NPM `links.elmzn.be` **pas encore faits** — prochaine étape.
+
 ## [3.5.2] - 2026-09-11
 
 ### MyTCG — cotes japonaises + resynchronisation du dépôt sur `/opt`

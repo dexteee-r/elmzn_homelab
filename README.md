@@ -41,6 +41,7 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ✅ **Hébergement web** (lxc-web — portail homelab `elmzn.be` (LAN only) + portfolio Next.js `portfolio.elmzn.be`)
 - ✅ **Web app auto-hébergée** (`watchlist.elmzn.be` — *Series Tracker* : React/Vite + FastAPI + PostgreSQL, auto-déployée via runner GitHub Actions)
 - ✅ **Gestionnaire de collection de cartes** (`mytcg.elmzn.be` — *MyTCG* : React + FastAPI + SQLite, stack native, auto-déploiement pull-based)
+- 🔄 **Page link-in-bio** (`links.elmzn.be` — *linktree-host* : Node.js/Express + SQLite, [repo dédié](https://github.com/dexteee-r/linktree-host), code prêt — déploiement sur vm-extranet à faire)
 - ✅ **Automatisation** (n8n — LXC dédié Docker, éditeur LAN/VPN uniquement, webhooks publics via sous-domaine dédié)
 - ✅ **LLM auto-hébergé** (Ollama + qwen2.5:7b — inférence CPU, réseau interne uniquement, aucune API tierce)
 - ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
@@ -69,6 +70,7 @@ Box Internet (192.168.1.1)
    │  ├─ Proxmox host        : 192.168.1.100
    │  ├─ VM-EXTRANET (101)   : 192.168.1.111
    │  │   └─ Services : NPM, UFW, fail2ban
+   │  │       └─ 🔄 linktree-host (Docker, `links.elmzn.be` — pas encore déployé)
    │  ├─ LXC lxc-web (102)   : 192.168.1.112
    │  │   ├─ elmzn.be (portail homelab statique — accès LAN uniquement)
    │  │   └─ portfolio.elmzn.be (Next.js SSR — PM2 :3001)
@@ -155,6 +157,7 @@ Box Internet (192.168.1.1)
 | **n8n** — `media.elmzn.be` | 8081 (LXC 106) | Fichiers statiques temporaires — lecture seule, purge auto 48h ✅ |
 | **Ollama** | 11434 (interne, LXC 106) | LLM local `qwen2.5:7b` — inférence CPU, joignable uniquement par n8n (réseau Compose), aucun port publié ✅ |
 | **mytcg.elmzn.be** | 80 (LXC 107) | *MyTCG* — gestionnaire de collection de cartes, stack native (Nginx + FastAPI/uvicorn + SQLite), auto-déploiement pull-based toutes les 5 min ✅ — code dans `/opt/mytcg` (aligné sur les autres services, dépôt resynchronisé), cotes EN + JP rafraîchies automatiquement tous les 3 jours |
+| **links.elmzn.be** | 3000 (interne, VM-EXTRANET) | *linktree-host* — page link-in-bio auto-hébergée (Node.js/Express + SQLite, stats clics/vues, pas d'admin UI publique) — 🔄 [repo créé](https://github.com/dexteee-r/linktree-host), déploiement sur vm-extranet pas encore fait |
 | **Vaultwarden** | — | 🔄 LXC créé, configuration en cours |
 | **OpenVPN** | — | ⚠️ Inactif |
 | **ddclient** | — | ⚠️ Inactif |
@@ -513,6 +516,7 @@ restic restore latest --target /restore --tag photos
 
 ### 🔄 En Cours
 
+- [ ] linktree-host — page link-in-bio `links.elmzn.be` ([repo créé](https://github.com/dexteee-r/linktree-host), déploiement sur vm-extranet à faire)
 - [ ] Backups automatisés (Restic)
 - [ ] Vaultwarden — configuration et mise en production
 - [ ] Home Assistant — configuration domotique
@@ -566,7 +570,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 11 septembre 2026 (MyTCG : cotes japonaises + dépôt resynchronisé sur `/opt/mytcg`)
+**Dernière mise à jour:** 19 septembre 2026 (linktree-host : repo dédié créé, déploiement sur vm-extranet à faire)
 **Version architecture:** 3.1 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---
