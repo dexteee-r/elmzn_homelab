@@ -5,6 +5,8 @@
 **Décideurs** : Équipe projet  
 **Tags** : `dns`, `ddns`, `ovh`, `domain`, `vpn`
 
+> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. L'IP `192.168.1.101` citée plus bas est **obsolète** (la vraie IP vérifiée pour VM-INTRANET est `192.168.1.201`). Pour l'état réel actuel de l'infrastructure, voir `README.md`.
+
 ---
 
 ## 📋 Contexte

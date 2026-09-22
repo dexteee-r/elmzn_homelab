@@ -5,6 +5,8 @@
 **Décideurs :** Markus  
 **Tags :** `architecture`, `infrastructure`, `sécurité`
 
+> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. Depuis, Machine #1 est passée du Dell OptiPlex 7040 à un Beelink S12 (migration du 2026-03-21, voir `docs/MIGRATION-M1-vers-nouvelle-machine.md`) — l'ancien OptiPlex a été reconverti en Machine #3 (NAS ZimaOS). L'IP `192.168.1.101` citée plus bas pour VM-INTRANET est aussi **obsolète** (la vraie IP vérifiée est `192.168.1.201`), et l'infrastructure compte aujourd'hui 3 machines, pas 2. Pour l'état réel actuel, voir `README.md`.
+
 ---
 
 ## Contexte

@@ -6,6 +6,8 @@
 **Décideurs** : Équipe projet  
 **Tags** : `reverse-proxy`, `npm`, `traefik`, `nginx`, `ssl`
 
+> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. L'IP `192.168.1.101` citée plus bas pour VM-INTRANET est **obsolète** (la vraie IP vérifiée est `192.168.1.201`). Pour l'état réel actuel de l'infrastructure, voir `README.md`.
+
 ---
 
 ## 📋 Contexte
