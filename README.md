@@ -41,11 +41,13 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ✅ **Hébergement web** (lxc-web — portail homelab `elmzn.be` (LAN only) + portfolio Next.js `portfolio.elmzn.be`)
 - ✅ **Web app auto-hébergée** (`watchlist.elmzn.be` — *Series Tracker* : React/Vite + FastAPI + PostgreSQL, auto-déployée via runner GitHub Actions)
 - ✅ **Gestionnaire de collection de cartes** (`mytcg.elmzn.be` — *MyTCG* : React + FastAPI + SQLite, stack native, auto-déploiement pull-based)
-- 🔄 **Page link-in-bio** (`links.elmzn.be` — *linktree-host* : Node.js/Express + SQLite, [repo dédié](https://github.com/dexteee-r/linktree-host), conteneur en ligne sur vm-extranet — reste DNS OVH + Proxy Host NPM avant exposition publique)
-- ✅ **Automatisation** (n8n — LXC dédié Docker, éditeur LAN/VPN uniquement, webhooks publics via sous-domaine dédié)
-- ✅ **LLM auto-hébergé** (Ollama + qwen2.5:7b — inférence CPU, réseau interne uniquement, aucune API tierce)
+- ✅ **Page link-in-bio** (`links.elmzn.be` — *linktree-host* : Node.js/Express + SQLite, [repo dédié](https://github.com/dexteee-r/linktree-host), en prod public depuis vm-extranet)
+- ⏸️ **Automatisation** (n8n — LXC dédié Docker, arrêté volontairement, inutilisé pour l'instant — configuration conservée pour reprise future)
+- ⏸️ **LLM auto-hébergé** (Ollama + qwen2.5:7b — fait partie de la stack n8n, arrêté avec elle)
 - ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
 - ✅ **NAS domestique** (ZimaOS — SMB, NFS, rclone, ZeroTier)
+- ✅ **Stockage fichiers avec interface web** (`files.elmzn.be` — FileBrowser Quantum, LAN uniquement)
+- 🟡 **Monitoring infrastructure** (Checkmk — LXC dédié, supervision Proxmox agentless, configuration en cours)
 - 🔄 **Domotique** (Home Assistant — installé, config en cours)
 - 🔄 **DNS ad-blocker** (Pi-hole — installé, config en cours)
 - 🔄 **Mail server** (Poste.io — installé, config en cours)
@@ -62,7 +64,7 @@ Internet (WAN)
 Box Internet (192.168.1.1)
 ├─ Port forwarding :
 │  ├─ 80/443 → Machine #1 (vm-extranet)
-│  └─ 1194/udp → Machine #1 (OpenVPN — inactif)
+│  └─ 51820/udp → Machine #1 (WireGuard — subnet-router, LXC 103)
 │
 └─ LAN (192.168.1.0/24)
    │
@@ -70,27 +72,31 @@ Box Internet (192.168.1.1)
    │  ├─ Proxmox host        : 192.168.1.100
    │  ├─ VM-EXTRANET (101)   : 192.168.1.111
    │  │   └─ Services : NPM, UFW, fail2ban
-   │  │       └─ 🔄 linktree-host (Docker, port 3000 interne — `links.elmzn.be` pas encore exposé publiquement)
+   │  │       └─ linktree-host (Docker, port 3000 interne — `links.elmzn.be` en prod, public)
    │  ├─ LXC lxc-web (102)   : 192.168.1.112
    │  │   ├─ elmzn.be (portail homelab statique — accès LAN uniquement)
    │  │   └─ portfolio.elmzn.be (Next.js SSR — PM2 :3001)
    │  ├─ LXC watchlist (105) : 192.168.1.115
    │  │   └─ watchlist.elmzn.be (Series Tracker — Docker : nginx+SPA / FastAPI / PostgreSQL)
-   │  ├─ LXC n8n (106)       : 192.168.1.116 — 8 Go RAM, 4 cœurs, 32 Go
+   │  ├─ LXC n8n (106)       : 192.168.1.116 — 8 Go RAM, 4 cœurs, 32 Go — ⏸️ ARRÊTÉ (inutilisé, onboot désactivé)
    │  │   ├─ Automatisation self-hosted — Docker, port 5678
    │  │   │   n8n.elmzn.be (éditeur, LAN/VPN) + hooks.elmzn.be (webhooks, public)
    │  │   ├─ media.elmzn.be — fichiers statiques (port 8081, lecture seule)
    │  │   └─ Ollama (qwen2.5:7b) — LLM local CPU, réseau interne Compose, aucun port publié
    │  ├─ LXC mytcg (107)     : 192.168.1.117 — 4 Go RAM, 2 cœurs, 20 Go
    │  │   └─ mytcg.elmzn.be (MyTCG — stack native : Nginx + FastAPI/uvicorn + SQLite)
+   │  ├─ LXC monitoring (108): 192.168.1.118 — 4 Go RAM, 2 cœurs, 20 Go — 🟡 en cours
+   │  │   └─ Checkmk (natif, OMD) — supervision Proxmox agentless, piggyback des 8 LXC/VM
    │  └─ LXC vaultwarden (100): en cours de config
    │
    ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
    │  ├─ Proxmox host        : 192.168.1.200
    │  ├─ VM-INTRANET (101)   : 192.168.1.201
    │  │   └─ Services : NPM, Immich, Grafana, Prometheus, node_exporter
-   │  └─ LXC minecraft-cobblemon (200) : 192.168.1.202
-   │      └─ Serveurs : cobbleverse★ (Fabric), cobblemon-academy (Fabric), demon-slayer (Forge)
+   │  ├─ LXC minecraft-cobblemon (200) : 192.168.1.202
+   │  │   └─ Serveurs : cobbleverse★ (Fabric), cobblemon-academy (Fabric), demon-slayer (Forge)
+   │  └─ LXC filestore (201) : 192.168.1.203
+   │      └─ files.elmzn.be (FileBrowser Quantum — dataset ZFS data-pool/files, LAN uniquement)
    │
    └─ Machine #3 : NAS — ZimaOS (ZIMA-CUBE ou similaire)
       └─ Services : NFS, Samba, ZeroTier, rclone, qBittorrent
@@ -141,6 +147,7 @@ Box Internet (192.168.1.1)
 | **PostgreSQL** | :5432 (interne) | Base de données Immich (pgvecto-rs:pg14) |
 | **Redis** | :6379 (interne) | Cache Immich (redis:6.2-alpine) |
 | **Node Exporter** | :9100 | Métriques système |
+| **files.elmzn.be** | 80 (LXC 201) | *FileBrowser Quantum* — stockage fichiers avec interface web, dataset ZFS `data-pool/files` (512 GB), LAN uniquement (Access List NPM) ✅ |
 
 ### **Machine #1 : EXTRANET**
 
@@ -152,15 +159,17 @@ Box Internet (192.168.1.1)
 | **lxc-web — elmzn.be** | 80 | Portail homelab statique — LAN only (Access List NPM), déploiement par `git push` (bare repo + hook post-receive) |
 | **lxc-web — portfolio.elmzn.be** | 3001 (PM2) | Portfolio Next.js SSR (standalone) ✅ |
 | **watchlist.elmzn.be** | 80 (LXC 105) | *Series Tracker* — web app Docker (nginx+React / FastAPI / PostgreSQL), auto-deploy GitHub Actions ✅ |
-| **n8n** — `n8n.elmzn.be` | 5678 (LXC 106) | Automatisation workflows — Docker, éditeur/API restreints LAN/VPN (Access List NPM) ✅ |
-| **n8n** — `hooks.elmzn.be` | 5678 (LXC 106) | Webhooks n8n uniquement (`/webhook/*`) — public, pour intégrations externes ✅ |
-| **n8n** — `media.elmzn.be` | 8081 (LXC 106) | Fichiers statiques temporaires — lecture seule, purge auto 48h ✅ |
-| **Ollama** | 11434 (interne, LXC 106) | LLM local `qwen2.5:7b` — inférence CPU, joignable uniquement par n8n (réseau Compose), aucun port publié ✅ |
+| **n8n** — `n8n.elmzn.be` | 5678 (LXC 106) | Automatisation workflows — Docker, éditeur/API restreints LAN/VPN (Access List NPM) — ⏸️ **ARRÊTÉ** (inutilisé pour l'instant, `onboot` désactivé, configuration conservée) |
+| **n8n** — `hooks.elmzn.be` | 5678 (LXC 106) | Webhooks n8n uniquement (`/webhook/*`) — public, pour intégrations externes — ⏸️ arrêté avec le reste du LXC |
+| **n8n** — `media.elmzn.be` | 8081 (LXC 106) | Fichiers statiques temporaires — lecture seule, purge auto 48h — ⏸️ arrêté avec le reste du LXC |
+| **Ollama** | 11434 (interne, LXC 106) | LLM local `qwen2.5:7b` — inférence CPU, joignable uniquement par n8n (réseau Compose), aucun port publié — ⏸️ arrêté avec le reste du LXC |
 | **mytcg.elmzn.be** | 80 (LXC 107) | *MyTCG* — gestionnaire de collection de cartes, stack native (Nginx + FastAPI/uvicorn + SQLite), auto-déploiement pull-based toutes les 5 min ✅ — code dans `/opt/mytcg` (aligné sur les autres services, dépôt resynchronisé), cotes EN + JP rafraîchies automatiquement tous les 3 jours |
-| **links.elmzn.be** | 3000 (interne, VM-EXTRANET) | *linktree-host* — page link-in-bio auto-hébergée (Node.js/Express + SQLite, stats clics/vues, pas d'admin UI publique) — 🔄 [repo créé](https://github.com/dexteee-r/linktree-host), conteneur `linktree-host` en ligne (Docker, sur `extranet_default`, healthy), reste DNS OVH + Proxy Host NPM (public, pas de LAN-only) |
+| **Checkmk** | :80 (LXC 108, IP directe) | Supervision infrastructure — natif (OMD), Special Agent Proxmox VE fonctionnel — 🟡 en cours (création des hôtes piggyback), pas encore exposé via NPM |
+| **links.elmzn.be** | 3000 (interne, VM-EXTRANET) | *linktree-host* — page link-in-bio auto-hébergée (Node.js/Express + SQLite, stats par événement horodaté, backup CSV quotidien) — ✅ [repo dédié](https://github.com/dexteee-r/linktree-host), en prod, public (pas de LAN-only) |
 | **Vaultwarden** | — | 🔄 LXC créé, configuration en cours |
-| **OpenVPN** | — | ⚠️ Inactif |
-| **ddclient** | — | ⚠️ Inactif |
+| **VPN WireGuard** | 51820/udp (LXC 103) | Subnet-router (wg-easy) — accès à tout le LAN depuis l'extérieur ✅ |
+| **OpenVPN** | — | ⚠️ Abandonné au profit de WireGuard, jamais installé |
+| **ddclient** | — | ✅ DDNS automatisé, actif sur l'hôte `pve-extranet` |
 
 ### **Machine #3 : NAS ZimaOS**
 
@@ -194,7 +203,7 @@ Profils gérés par `mc-switch` :
 | Dataset | Quota | Utilisé | Mountpoint |
 |---------|-------|---------|------------|
 | `data-pool/photos` | ~2 TB | 9.6 GB | `/mnt/data-pool/photos` (NFS → vmIntranet) |
-| `data-pool/files` | 512 GB | 0 | `/mnt/data-pool/files` (NFS → vmIntranet) |
+| `data-pool/files` | 512 GB | ~418 GB | `/mnt/data-pool/files` (NFS → vmIntranet, + FileBrowser Quantum sur LXC 201) |
 | `data-pool/backups` | 512 GB | 0 | `/mnt/data-pool/backups` (NFS → vmIntranet) |
 | `data-pool/media` | 512 GB | 0 | `/mnt/data-pool/media` (NFS → vmIntranet) |
 
@@ -212,6 +221,8 @@ Profils gérés par `mc-switch` :
 ---
 
 ## 🚀 Quick Start
+
+> ⚠️ Section générique conservée pour référence. Pour une reproduction fidèle et à jour de l'infrastructure réelle, préférer **[docs/tutos/](docs/tutos/README.md)**. Les fichiers `configs/machine1-extranet/` et `configs/machine2-intranet/` référencés ci-dessous sont des **archives pré-migration** (ancien matériel, mauvaises IP) — voir l'avertissement en tête de ces fichiers.
 
 ### **Prérequis**
 
@@ -348,22 +359,22 @@ URL: https://immich.intranet.elmzn.be
 
 ## 📖 Documentation Complète
 
-### **Guides d'Installation**
+### **Guides d'Installation (à jour)**
 
-- 🚀 [**SETUP-MACHINE1.md**](docs/SETUP-MACHINE1.md) - Configuration EXTRANET (à venir)
-- 🚀 [**SETUP-MACHINE2.md**](docs/SETUP-MACHINE2.md) - Configuration INTRANET détaillée
-- 🚀 [**INSTALL-M2-COMPLETE.md**](docs/INSTALL-M2-COMPLETE.md) - Setup complet M2
+- 👉 [**docs/tutos/**](docs/tutos/) - Guides pas à pas reproductibles, alignés sur l'infra réelle : `installer-proxmox.md`, `serveur-web.md`, `vpn-wireguard-subnet-router.md`, `nas-zimaos.md`, `serveur-minecraft.md`
+- 📝 [**ADR/**](docs/ADR/) - Architecture Decision Records (le *pourquoi* des choix)
 
 ### **Documentation Technique**
 
-- 📁 [**ARCHITECTURE.md**](docs/ARCHITECTURE.md) - Architecture détaillée
-- 🔒 [**SECURITY.md**](docs/SECURITY.md) - Politique sécurité
-- 📊 [**OPERATIONS.md**](docs/OPERATIONS.md) - Runbooks maintenance
-- 📝 [**ADR/**](docs/ADR/) - Architecture Decision Records
+- 📄 [**web-server-doc-v2.pdf**](docs/web-server-doc-v2.pdf) - Doc source ayant servi à rédiger `docs/tutos/serveur-web.md`
+
+### **Archives (obsolètes, gardées pour historique — ne pas suivre)**
+
+- ⚠️ [**SETUP-MACHINE1.md**](docs/SETUP-MACHINE1.md) / [**SETUP-MACHINE2.md**](docs/SETUP-MACHINE2.md) - Plans **pré-migration** rédigés avant le passage à l'architecture actuelle (parlent encore de l'ancien Dell OptiPlex comme "Machine #1", d'OpenVPN, de Nextcloud...) — **jamais déployés tels quels**. Le vrai déroulé réel est dans [docs/MIGRATION-M1-vers-nouvelle-machine.md](docs/MIGRATION-M1-vers-nouvelle-machine.md) et dans `docs/tutos/installer-proxmox.md`.
 
 ### **Journal de Bord**
 
-- 📓 [**Setup Homelab Machine #2**](docs/JOURNAL%20DE%20BORD/Setup-Homelab-Machine-#2.md) - Historique setup détaillé (02-04 déc 2025)
+- 📓 [**docs/JOURNAL DE BORD/**](docs/JOURNAL%20DE%20BORD/) - Logs de session datés, immuables (ex. [Setup Homelab Machine #2](<docs/JOURNAL DE BORD/Setup Homelab Machine #2.md>), 02-04 déc 2025)
 
 ---
 
@@ -391,7 +402,7 @@ docker compose ps
 
 ### **Gestion VMs & LXC Proxmox**
 ```bash
-# SSH vers Proxmox M2
+# SSH vers Proxmox Machine #2 (INTRANET)
 ssh root@192.168.1.200   # srv2
 
 # Lister VMs et LXC
@@ -407,10 +418,14 @@ pct start 200
 pct stop 200
 pct exec 200 -- mc-switch list
 
-# SSH vers Proxmox M1
-ssh root@192.168.1.100   # pve
+# LXC filestore (201)
+pct start 201
+pct stop 201
 
-# LXC lxc-web (102) sur M1
+# SSH vers Proxmox Machine #1 (EXTRANET)
+ssh root@192.168.1.100   # pve-extranet
+
+# LXC lxc-web (102) sur Machine #1
 pct start 102
 pct stop 102
 ```
@@ -454,7 +469,7 @@ restic restore latest --target /restore --tag photos
 4. **NPM Access Lists** - Grafana/Prometheus = LAN uniquement ; `elmzn.be` = LAN uniquement (403 pour le public)
 5. **Application Auth** - Comptes + passwords forts
 
-> ⚠️ OpenVPN inactif sur M1 — accès VPN non opérationnel
+> ✅ VPN WireGuard (subnet-router, LXC 103 sur Machine #1) opérationnel — accès à tout le LAN depuis l'extérieur. OpenVPN a été abandonné et n'a jamais été installé.
 
 **Principe:** Machine #2 JAMAIS exposée directement Internet.
 
@@ -513,11 +528,14 @@ restic restore latest --target /restore --tag photos
 - [x] n8n exposé publiquement — `n8n.elmzn.be` (éditeur, LAN/VPN) + `hooks.elmzn.be` (webhooks, public) + `media.elmzn.be` (fichiers statiques, lecture seule, purge 48h) (2026-08-05)
 - [x] LLM local Ollama (`qwen2.5:7b`, inférence CPU) ajouté à la stack n8n — réseau interne uniquement, LXC 106 porté à 8 Go / 4 cœurs / 32 Go (2026-08-05)
 - [x] `mytcg.elmzn.be` déployé — *MyTCG* (stack native Nginx + FastAPI + SQLite, LXC 107 sur pve-extranet), auto-déploiement pull-based conditionné à la CI + backup nocturne de la base (2026-08-07)
+- [x] `files.elmzn.be` déployé — FileBrowser Quantum (natif, LXC 201 sur srv2), dataset ZFS `data-pool/files` réutilisé, migration de 418 Go / 13 862 fichiers terminée (2026-09-12/14)
+- [x] `links.elmzn.be` (linktree-host) passé en production complète — DNS OVH + Proxy Host NPM public, page `/stats` refaite, backup CSV quotidien des statistiques (2026-09-19/21)
+- [x] n8n arrêté volontairement (inutilisé pour l'instant) — `onboot` désactivé, configuration et données conservées pour reprise future (2026-08-25 / 2026-09-06)
 
 ### 🔄 En Cours
 
-- [ ] linktree-host — page link-in-bio `links.elmzn.be` ([repo créé](https://github.com/dexteee-r/linktree-host), conteneur en ligne sur vm-extranet, reste DNS OVH + Proxy Host NPM)
-- [ ] Backups automatisés (Restic)
+- [ ] Monitoring Checkmk (LXC 108) — Special Agent Proxmox VE fonctionnel, reste à créer manuellement les 8 hôtes piggyback dans l'UI + leur Discovery
+- [ ] Backups automatisés (Restic) — gap connu sur plusieurs services (n8n, MyTCG, linktree-host, filestore n'ont aucun backup Proxmox)
 - [ ] Vaultwarden — configuration et mise en production
 - [ ] Home Assistant — configuration domotique
 - [ ] Pi-hole — configuration DNS ad-blocker
@@ -570,8 +588,8 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 19 septembre 2026 (linktree-host : conteneur déployé et sain sur vm-extranet, reste DNS OVH + Proxy Host NPM)
-**Version architecture:** 3.1 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
+**Dernière mise à jour:** 22 septembre 2026 (mise à jour de suivi : monitoring Checkmk + filestore ajoutés, linktree-host en prod complète, n8n arrêté volontairement)
+**Version architecture:** 3.2 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---
 

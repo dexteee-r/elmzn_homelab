@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.7.0] - 2026-09-22
+
+### Mise a jour de suivi — monitoring, filestore, linktree en prod, n8n a l'arret
+
+#### Added
+- LXC 108 `monitoring` (192.168.1.118, pve-extranet) : Checkmk 2.5.0p12 Community (natif, OMD). Special Agent Proxmox VE configure et fonctionnel sur l'hote `pve-extranet` — supervision de l'hote + piggyback pour les 8 LXC/VM. En cours : creation manuelle des hotes piggyback dans l'UI (pas d'auto-discovery de ces hotes dans cette version de Checkmk).
+- LXC 201 `filestore` (192.168.1.203, srv2) : FileBrowser Quantum (natif, systemd), interface web de stockage sur le dataset ZFS deja existant `data-pool/files` (512 Go). Public LAN-only sur `https://files.elmzn.be`. Migration du dossier de montage personnel (418 Go / 13 862 fichiers) terminee.
+
+#### Changed
+- `links.elmzn.be` (linktree-host) passe en production complete : DNS OVH + Proxy Host NPM (public, sans Access List). Lien Twitch ajoute, page `/stats` entierement refaite (metriques par evenement horodate plutot que compteurs cumules), backup CSV quotidien des statistiques, liens reordonnes par priorite metier.
+- n8n (LXC 106) arrete volontairement (inutilise pour l'instant) — `onboot` desactive pour qu'il ne redemarre plus automatiquement avec le Beelink. Le conteneur, ses workflows et ses credentials restent en place pour une reprise future.
+
+#### Notes
+- Ce depot de documentation avait pris du retard sur plusieurs services reels deployes ou arretes entre le 12 et le 21 septembre — mise a jour de rattrapage pour que README et CHANGELOG refletent l'etat actuel de l'infrastructure.
+- Le diagramme d'architecture et les tables de services du README ont ete corriges sur un point herite : le port forwarding WAN listait encore OpenVPN (abandonne depuis longtemps au profit de WireGuard) au lieu du vrai port 51820/udp.
+
 ## [3.6.0] - 2026-09-19
 
 ### Nouveau repo `linktree-host` — page link-in-bio (préparation)

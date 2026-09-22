@@ -1,10 +1,20 @@
-# Docker Compose Stack - Machine #1 EXTRANET
+# ⚠️ ARCHIVE OBSOLÈTE — PRÉ-MIGRATION, NE PAS SUIVRE TEL QUEL
+# Ce fichier décrit encore l'ANCIEN Machine #1 (Dell OptiPlex 7040), avant la
+# migration du 2026-03-21 vers un Beelink S12. Ce Dell OptiPlex est aujourd'hui
+# reconverti en Machine #3 (NAS ZimaOS) — voir README.md.
+# Pour l'état réel et les services actuels de Machine #1 EXTRANET, voir :
+#   - README.md (tables "Services Déployés")
+#   - docs/tutos/serveur-web.md et docs/tutos/vpn-wireguard-subnet-router.md
+# Gardé uniquement à titre d'archive historique.
+# =============================================================================
+
+# Docker Compose Stack - Machine #1 EXTRANET (ANCIEN MATÉRIEL, voir avertissement ci-dessus)
 
 version: '3.8'
 
 # =============================================================================
 # SERVICES EXTRANET (DMZ)
-# Machine #1 : Dell OptiPlex 7040 (i5-6500, 16 GB RAM)
+# Machine #1 : Dell OptiPlex 7040 (i5-6500, 16 GB RAM) — ⚠️ obsolète, voir avertissement en tête de fichier
 # Rôle : Exposition Internet UNIQUEMENT
 # =============================================================================
 

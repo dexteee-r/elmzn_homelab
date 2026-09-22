@@ -1,3 +1,12 @@
+# ⚠️ ARCHIVE OBSOLÈTE — PRÉ-MIGRATION, NE PAS SUIVRE TEL QUEL
+# L'IP de vm-intranet indiquée ici (192.168.1.101) est FAUSSE : l'IP réelle
+# vérifiée est 192.168.1.201. Ce fichier date d'avant la mise en service réelle.
+# Pour l'état réel et les services actuels de Machine #2 INTRANET, voir :
+#   - README.md (tables "Services Déployés")
+#   - docs/tutos/installer-proxmox.md
+# Gardé uniquement à titre d'archive historique.
+# =============================================================================
+
 # Docker Compose Stack - Machine #2 INTRANET
 
 # =============================================================================
