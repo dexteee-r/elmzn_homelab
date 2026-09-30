@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.8.0] - 2026-10-01
+
+### Portail renommé `home.elmzn.be`, `elmzn.be` devient le portfolio personnel
+
+#### Added
+- LXC 104 `portfolio` (192.168.1.114, pve-extranet) : Debian 12, Docker Engine + plugin compose. Portfolio personnel Next.js (image `ghcr.io/dexteee-r/portfolio`, [repo dédié](https://github.com/dexteee-r/Portfolio)), conteneur durci (lecture seule, `cap_drop ALL`, `no-new-privileges`), public sur `https://elmzn.be` (port 3000).
+- CI/CD via runner GitHub Actions self-hosted (label `portfolio`) installé dans le LXC sous un utilisateur dédié (groupe `docker`). Le déploiement se déclenche uniquement après une CI verte sur `main`, vérifie explicitement que le dépôt d'origine n'est jamais un fork, ne porte aucun token (`permissions: {}`) et ne fait aucun checkout — durci spécifiquement parce que le dépôt applicatif est public (un runner self-hosted classique y serait exploitable via une pull request de fork). Un timer systemd horaire rejoue le déploiement en filet de secours si le runner le manque.
+- `www.elmzn.be` : redirection 301 (Redirection Host NPM dédié, chemin préservé) vers `https://elmzn.be`, plutôt qu'un proxy partagé — nécessaire pour que l'authentification OAuth du CMS (qui n'accepte que `elmzn.be` en callback) ne casse pas.
+- CMS Sveltia (`/admin`) configuré via une OAuth App GitHub dédiée, jeton sans expiration (le flux de rafraîchissement de token n'est pas compatible avec une OAuth App GitHub classique).
+
+#### Changed
+- Portail homelab (ex-`elmzn.be`) renommé en `home.elmzn.be` — même LXC (`lxc-web`, 102), même Access List LAN-only, seul le nom de domaine change.
+- HSTS active sur `elmzn.be` (sans `includeSubDomains` tant que tous les sous-domaines ne sont pas en HTTPS).
+
+#### Notes
+- Aucun changement DNS necessaire pour le renommage : `home.elmzn.be` etait deja l'enregistrement dynamique reel (mis a jour par `ddclient`), `elmzn.be`/`www.elmzn.be` pointent vers la meme IP publique — toute la bascule s'est jouee au niveau du routage NPM (Host header).
+- Meme faille de securite (runner self-hosted sur depot public) potentiellement presente sur `watchlist.elmzn.be` (`dexteee-r/watch_list`, egalement public) — pas encore corrigee, a reprendre separement.
+
 ## [3.7.0] - 2026-09-22
 
 ### Mise a jour de suivi — monitoring, filestore, linktree en prod, n8n a l'arret

@@ -38,7 +38,8 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ✅ **Monitoring** (Prometheus + Grafana)
 - ⚠️ **Accès distant** (OpenVPN - inactif)
 - ✅ **Reverse proxy SSL** (Nginx Proxy Manager)
-- ✅ **Hébergement web** (lxc-web — portail homelab `elmzn.be` (LAN only) + portfolio Next.js `portfolio.elmzn.be`)
+- ✅ **Hébergement web** (lxc-web — portail homelab `home.elmzn.be` (LAN only) + ancien portfolio Next.js `portfolio.elmzn.be`)
+- ✅ **Portfolio personnel** (`elmzn.be` — Next.js/Docker, LXC dédié sur pve-extranet, CI/CD via runner GitHub Actions self-hosted durci + CMS Sveltia)
 - ✅ **Web app auto-hébergée** (`watchlist.elmzn.be` — *Series Tracker* : React/Vite + FastAPI + PostgreSQL, auto-déployée via runner GitHub Actions)
 - ✅ **Gestionnaire de collection de cartes** (`mytcg.elmzn.be` — *MyTCG* : React + FastAPI + SQLite, stack native, auto-déploiement pull-based)
 - ✅ **Page link-in-bio** (`links.elmzn.be` — *linktree-host* : Node.js/Express + SQLite, [repo dédié](https://github.com/dexteee-r/linktree-host), en prod public depuis vm-extranet)
@@ -74,8 +75,10 @@ Box Internet (192.168.1.1)
    │  │   └─ Services : NPM, UFW, fail2ban
    │  │       └─ linktree-host (Docker, port 3000 interne — `links.elmzn.be` en prod, public)
    │  ├─ LXC lxc-web (102)   : 192.168.1.112
-   │  │   ├─ elmzn.be (portail homelab statique — accès LAN uniquement)
+   │  │   ├─ home.elmzn.be (portail homelab statique — accès LAN uniquement)
    │  │   └─ portfolio.elmzn.be (Next.js SSR — PM2 :3001)
+   │  ├─ LXC portfolio (104) : 192.168.1.114 — 2 Go RAM, 2 cœurs, 16 Go, Debian 12
+   │  │   └─ elmzn.be (portfolio personnel — Next.js/Docker, public, CI/CD runner self-hosted + CMS Sveltia)
    │  ├─ LXC watchlist (105) : 192.168.1.115
    │  │   └─ watchlist.elmzn.be (Series Tracker — Docker : nginx+SPA / FastAPI / PostgreSQL)
    │  ├─ LXC n8n (106)       : 192.168.1.116 — 8 Go RAM, 4 cœurs, 32 Go — ⏸️ ARRÊTÉ (inutilisé, onboot désactivé)
@@ -156,8 +159,9 @@ Box Internet (192.168.1.1)
 | **Nginx Proxy Manager** | 80, 81, 443 | Reverse proxy public + SSL |
 | **UFW** | — | Firewall actif (SSH LAN only, HTTP/HTTPS open) |
 | **fail2ban** | — | Protection bruteforce (SSH + Nginx) |
-| **lxc-web — elmzn.be** | 80 | Portail homelab statique — LAN only (Access List NPM), déploiement par `git push` (bare repo + hook post-receive) |
-| **lxc-web — portfolio.elmzn.be** | 3001 (PM2) | Portfolio Next.js SSR (standalone) ✅ |
+| **lxc-web — home.elmzn.be** | 80 | Portail homelab statique — LAN only (Access List NPM), déploiement par `git push` (bare repo + hook post-receive) |
+| **lxc-web — portfolio.elmzn.be** | 3001 (PM2) | Ancien portfolio Next.js SSR (standalone) ✅ |
+| **elmzn.be** | 3000 (LXC 104) | Portfolio personnel — Next.js/Docker (image `ghcr.io/dexteee-r/portfolio`), public, CI/CD via runner GitHub Actions self-hosted (déclenché uniquement après CI verte sur `main`, jamais sur les PR de fork), CMS Sveltia (OAuth GitHub), `www.elmzn.be` redirige en 301 ✅ |
 | **watchlist.elmzn.be** | 80 (LXC 105) | *Series Tracker* — web app Docker (nginx+React / FastAPI / PostgreSQL), auto-deploy GitHub Actions ✅ |
 | **n8n** — `n8n.elmzn.be` | 5678 (LXC 106) | Automatisation workflows — Docker, éditeur/API restreints LAN/VPN (Access List NPM) — ⏸️ **ARRÊTÉ** (inutilisé pour l'instant, `onboot` désactivé, configuration conservée) |
 | **n8n** — `hooks.elmzn.be` | 5678 (LXC 106) | Webhooks n8n uniquement (`/webhook/*`) — public, pour intégrations externes — ⏸️ arrêté avec le reste du LXC |
@@ -522,6 +526,7 @@ restic restore latest --target /restore --tag photos
 - [x] `portfolio.elmzn.be` déployé en production — Next.js SSR standalone (2026-04-28)
 - [x] `watchlist.elmzn.be` déployé — web app *Series Tracker* (Docker, LXC 105 sur pve-extranet) + CI/CD auto-deploy via runner GitHub Actions self-hosted (2026-06-28)
 - [x] `elmzn.be` passé en accès LAN uniquement (Access List NPM) et reconverti en **portail homelab** — liens vers tous les services (2026-07-02)
+- [x] Portail homelab renommé `home.elmzn.be`, `elmzn.be` libéré et réattribué au portfolio personnel — nouveau LXC dédié (104), Next.js/Docker, CI/CD via runner GitHub Actions self-hosted durci (déclenchement restreint au push sur `main` du dépôt d'origine, aucun token, aucun checkout) + CMS Sveltia (OAuth GitHub) (2026-09-30/10-01)
 - [x] Déploiement auto du portail par `git push` (repo bare + hook post-receive sur lxc-web) (2026-07-02)
 - [x] Pages d'erreur 403/404/5xx communes — snippet nginx sur lxc-web (tous les vhosts) + hook custom NPM (tous les proxy hosts) (2026-07-03)
 - [x] n8n déployé — automatisation self-hosted (Docker, LXC 106 sur pve-extranet), accès LAN uniquement (2026-08-05)
@@ -588,7 +593,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 22 septembre 2026 (mise à jour de suivi : monitoring Checkmk + filestore ajoutés, linktree-host en prod complète, n8n arrêté volontairement)
+**Dernière mise à jour:** 1er octobre 2026 (portail renommé `home.elmzn.be`, `elmzn.be` réattribué au portfolio personnel sur nouveau LXC dédié)
 **Version architecture:** 3.2 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---
