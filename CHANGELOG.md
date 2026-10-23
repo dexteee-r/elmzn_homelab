@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deploiement du portfolio : le runner GitHub Actions self-hosted est retire (utilisateur supprime) et remplace par un timer systemd `elmzn-deploy` qui tire les changements toutes les 2 minutes (2026-10-10).
 - Backup vzdump hebdomadaire du Beelink deplace du dimanche 03:00 au dimanche 14:00 : les arrets nocturnes tombaient 3 minutes apres le debut du backup. Gouverneur CPU en `powersave`.
 - Immich : 3.1.0 vers 3.2.4 (2026-10-04).
+- srv2 mis a jour (2026-10-23) : 20 paquets (correctifs de securite Debian : curl, expat, xz, bind9, ca-certificates ; Proxmox dont le noyau 7.0.14-25) puis redemarrage ; invites, NFS et Immich 3.2.4 verifies apres coup.
 - srv2 : quota du dataset ZFS `data-pool/backups` releve de 700 a 800 Go (il etait a 91 %, un quota plein avait deja bloque un backup Immich pendant plus de 11 h).
 
 #### Notes

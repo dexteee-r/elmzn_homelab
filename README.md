@@ -547,11 +547,11 @@ restic restore latest --target /restore --tag photos
 - [x] Checkmk : 8 hôtes piggyback + surveillance HTTP/certificats des sous-domaines publics (2026-10-23)
 - [x] Stabilité du Beelink : backup hebdomadaire déplacé au dimanche 14:00, log thermique en place, LXC 102 réparé après un verrou vzdump (2026-10-23)
 - [x] Audit de srv2 (2026-10-23) : SSH durci, NFS restreint, ZFS sain ; quota `backups` porté à 800 GB ; dumps `pre-upgrade` de vm-intranet et filestore
+- [x] srv2 mis à jour (2026-10-23) : 20 paquets dont correctifs de sécurité Debian, noyau 7.0.14-25, redémarrage fait ; invités, NFS et Immich vérifiés après coup
 
 ### 🔄 En Cours
 
 - [ ] Monitoring Checkmk (LXC 108) — reste : mot de passe `cmkadmin`, notifications e-mail, agents/logs, supervision de vzdump
-- [ ] Mise à jour de srv2 (20 paquets dont correctifs de sécurité Debian + noyau 7.0.14-25, redémarrage nécessaire)
 - [ ] Backups automatisés — srv2 n'a aucun job vzdump ; n8n, MyTCG, linktree-host et filestore n'ont aucun backup Proxmox
 - [ ] Vaultwarden — reste : copie hors machine des dumps
 - [ ] Home Assistant — configuration domotique
