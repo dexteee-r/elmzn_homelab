@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.9.0] - 2026-10-23
+
+### Durcissement securite, monitoring, acces amis par VPN, stabilite et strategie de sauvegarde
+
+#### Added
+- Durcissement des hotes Proxmox (2026-10-04) : fail2ban, SSH par cle uniquement (mot de passe coupe), mises a jour + redemarrage des 2 hotes (noyau 7.0), export NFS de srv2 restreint a vm-intranet, Samba desactive, Dependabot active sur les depots applicatifs.
+- Passe de correctifs d'octobre (2026-10-22) : Checkmk sur PHP 8.4.27, linktree-host passe de Node 20 a Node 22, portfolio sur Node 24.22.1, et `ELMZN_VERSION` propage jusque dans l'image runtime du portfolio (le deploiement echouait a la validation).
+- Vaultwarden (LXC 100) en ligne sur `https://vault.elmzn.be` : inscriptions fermees, 2FA, backup vzdump quotidien (2026-10-15).
+- Monitoring Checkmk : 8 hotes piggyback crees (sans IP, donnees recues via l'hote Proxmox) + hote `sites-web` qui surveille en HTTP et certificats les sous-domaines publics (2026-10-23).
+- Acces des amis a une salle de jeu multijoueur hebergee sur un PC du LAN, via WireGuard (`wg-easy`) : pare-feu par client, aucun port ouvert sur la box (2026-10-23).
+- Log thermique du Beelink (`/var/log/thermal.csv`, une ligne par minute) pour correler bruit des ventilateurs et charge.
+- Portail `home.elmzn.be` : refonte de l'interface et pastilles d'etat en direct des services (`status.json` regenere par cron) (2026-10-05).
+
+#### Changed
+- Deploiement du portfolio : le runner GitHub Actions self-hosted est retire (utilisateur supprime) et remplace par un timer systemd `elmzn-deploy` qui tire les changements toutes les 2 minutes (2026-10-10).
+- Backup vzdump hebdomadaire du Beelink deplace du dimanche 03:00 au dimanche 14:00 : les arrets nocturnes tombaient 3 minutes apres le debut du backup. Gouverneur CPU en `powersave`.
+- Immich : 3.1.0 vers 3.2.4 (2026-10-04).
+- srv2 : quota du dataset ZFS `data-pool/backups` releve de 700 a 800 Go (il etait a 91 %, un quota plein avait deja bloque un backup Immich pendant plus de 11 h).
+
+#### Notes
+- **Incident (2026-10-18 au 23)** : le LXC 102 `lxc-web` est reste verrouille et arrete 5 jours apres un arret de l'hote pendant un vzdump (snapshot-delete orphelin). Repare le 2026-10-23. Regle : ne jamais eteindre un hote pendant un backup, et verifier `pct list` (colonne Lock) apres tout arret.
+- **Strategie de sauvegarde, constat** : le depot Restic d'Immich (~640 Go) est sur le meme disque ZFS que les photos (~600 Go). Il protege d'une erreur ou d'un bug applicatif, pas d'une panne du disque, et double l'espace occupe. Decision : le conserver tel quel en attendant une machine de sauvegarde dediee (support separe, idealement en miroir, d'au moins 4 To). A court terme : snapshots ZFS sur `photos`, et sauvegarde des petites donnees vitales (dump de la base Immich, vzdump des invites) sur le disque systeme.
+- srv2 n'avait aucun job vzdump. Avant la mise a jour de l'hote (2026-10-23), dumps manuels de vm-intranet (17 Go) et de `filestore` (323 Mo) dans `data-pool/backups/pre-upgrade`, integrite verifiee. Le LXC 200 `minecraft-cobblemon` n'est volontairement pas sauvegarde (choix assume) et son disque est plein a 92 %.
+
 ## [3.8.0] - 2026-10-01
 
 ### Portail renommé `home.elmzn.be`, `elmzn.be` devient le portfolio personnel

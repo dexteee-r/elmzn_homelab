@@ -206,9 +206,9 @@ Profils gérés par `mc-switch` :
 
 | Dataset | Quota | Utilisé | Mountpoint |
 |---------|-------|---------|------------|
-| `data-pool/photos` | ~2 TB | 9.6 GB | `/mnt/data-pool/photos` (NFS → vmIntranet) |
-| `data-pool/files` | 512 GB | ~418 GB | `/mnt/data-pool/files` (NFS → vmIntranet, + FileBrowser Quantum sur LXC 201) |
-| `data-pool/backups` | 512 GB | 0 | `/mnt/data-pool/backups` (NFS → vmIntranet) |
+| `data-pool/photos` | ~2 TB | ~602 GB | `/mnt/data-pool/photos` (NFS → vmIntranet) |
+| `data-pool/files` | 512 GB | ~397 GB | `/mnt/data-pool/files` (NFS → vmIntranet, + FileBrowser Quantum sur LXC 201) |
+| `data-pool/backups` | 800 GB | ~657 GB | `/mnt/data-pool/backups` (NFS → vmIntranet) — dépôt Restic d'Immich (~640 GB) + dumps temporaires `pre-upgrade` |
 | `data-pool/media` | 512 GB | 0 | `/mnt/data-pool/media` (NFS → vmIntranet) |
 
 ### **Stockage ZimaOS (Machine #3)**
@@ -469,7 +469,7 @@ restic restore latest --target /restore --tag photos
 
 1. **Box Firewall** - Ports 80/443 UNIQUEMENT vers Machine #1
 2. **UFW** - SSH LAN only, HTTP/HTTPS ouvert, tout le reste bloqué (vm-extranet ✅)
-3. **Fail2ban** - SSH ban 24h, Nginx auth/rate-limit ban 1h (vm-extranet ✅)
+3. **Fail2ban** - SSH ban 24h, Nginx auth/rate-limit ban 1h (vm-extranet ✅) ; fail2ban + SSH par clé uniquement sur les hôtes Proxmox, NFS restreint à vm-intranet (2026-10-04)
 4. **NPM Access Lists** - Grafana/Prometheus = LAN uniquement ; `elmzn.be` = LAN uniquement (403 pour le public)
 5. **Application Auth** - Comptes + passwords forts
 
@@ -492,6 +492,8 @@ restic restore latest --target /restore --tag photos
 
 - **Local:** Machine #1 (500 GB HDD)
 - **Offsite:** À implémenter (Backblaze B2)
+
+> ⚠️ **Limite connue (2026-10-23) :** le dépôt Restic d'Immich est sur le même disque ZFS que les photos. Il protège d'une erreur ou d'un bug applicatif, pas d'une panne de ce disque. Une machine de sauvegarde dédiée (support séparé) est à prévoir ; voir « Prochaines Étapes ». Le LXC Minecraft n'est volontairement pas sauvegardé.
 
 ---
 
@@ -536,20 +538,31 @@ restic restore latest --target /restore --tag photos
 - [x] `files.elmzn.be` déployé — FileBrowser Quantum (natif, LXC 201 sur srv2), dataset ZFS `data-pool/files` réutilisé, migration de 418 Go / 13 862 fichiers terminée (2026-09-12/14)
 - [x] `links.elmzn.be` (linktree-host) passé en production complète — DNS OVH + Proxy Host NPM public, page `/stats` refaite, backup CSV quotidien des statistiques (2026-09-19/21)
 - [x] n8n arrêté volontairement (inutilisé pour l'instant) — `onboot` désactivé, configuration et données conservées pour reprise future (2026-08-25 / 2026-09-06)
+- [x] Durcissement des hôtes Proxmox : fail2ban, SSH par clé, mises à jour + redémarrage (noyau 7.0), NFS restreint, Samba désactivé ; Immich 3.2.4 (2026-10-04)
+- [x] Portail `home.elmzn.be` : refonte de l'interface + pastilles d'état en direct (2026-10-05)
+- [x] Déploiement du portfolio : runner self-hosted remplacé par un timer systemd `elmzn-deploy` (2026-10-10)
+- [x] Vaultwarden en ligne sur `vault.elmzn.be` (inscriptions fermées, 2FA, backup vzdump quotidien) (2026-10-15)
+- [x] Correctifs de sécurité d'octobre : PHP 8.4.27 (Checkmk), Node 22 (linktree-host), Node 24.22.1 (portfolio) (2026-10-22)
+- [x] Accès des amis à une salle de jeu multijoueur du LAN via WireGuard, pare-feu par client, sans port ouvert (2026-10-23)
+- [x] Checkmk : 8 hôtes piggyback + surveillance HTTP/certificats des sous-domaines publics (2026-10-23)
+- [x] Stabilité du Beelink : backup hebdomadaire déplacé au dimanche 14:00, log thermique en place, LXC 102 réparé après un verrou vzdump (2026-10-23)
+- [x] Audit de srv2 (2026-10-23) : SSH durci, NFS restreint, ZFS sain ; quota `backups` porté à 800 GB ; dumps `pre-upgrade` de vm-intranet et filestore
 
 ### 🔄 En Cours
 
-- [ ] Monitoring Checkmk (LXC 108) — Special Agent Proxmox VE fonctionnel, reste à créer manuellement les 8 hôtes piggyback dans l'UI + leur Discovery
-- [ ] Backups automatisés (Restic) — gap connu sur plusieurs services (n8n, MyTCG, linktree-host, filestore n'ont aucun backup Proxmox)
-- [ ] Vaultwarden — configuration et mise en production
+- [ ] Monitoring Checkmk (LXC 108) — reste : mot de passe `cmkadmin`, notifications e-mail, agents/logs, supervision de vzdump
+- [ ] Mise à jour de srv2 (20 paquets dont correctifs de sécurité Debian + noyau 7.0.14-25, redémarrage nécessaire)
+- [ ] Backups automatisés — srv2 n'a aucun job vzdump ; n8n, MyTCG, linktree-host et filestore n'ont aucun backup Proxmox
+- [ ] Vaultwarden — reste : copie hors machine des dumps
 - [ ] Home Assistant — configuration domotique
 - [ ] Pi-hole — configuration DNS ad-blocker
 - [ ] Poste.io — configuration mail server
 
 ### 📅 Prochaines Étapes
 
+- [ ] Machine de sauvegarde dédiée (support séparé, idéalement en miroir, ≥ 4 TB) : copie des photos, des fichiers et des invités Proxmox ; ensuite snapshots ZFS sur `photos`
+- [ ] Agrandir ou nettoyer le disque du LXC Minecraft (plein à ~92 %)
 - [ ] Nextcloud déploiement
-- [ ] OpenVPN / accès distant
 - [ ] Uptime Kuma (monitoring uptime)
 - [ ] ddclient DDNS automatisé
 
@@ -593,7 +606,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 1er octobre 2026 (portail renommé `home.elmzn.be`, `elmzn.be` réattribué au portfolio personnel sur nouveau LXC dédié)
+**Dernière mise à jour:** 23 octobre 2026 (durcissement sécurité, monitoring Checkmk, accès VPN des amis, audit de srv2 et constat sur la stratégie de sauvegarde)
 **Version architecture:** 3.2 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---
