@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 - Deploiement du portfolio : le runner GitHub Actions self-hosted est retire (utilisateur supprime) et remplace par un timer systemd `elmzn-deploy` qui tire les changements toutes les 2 minutes (2026-10-10).
+- Deploiement de `watchlist` (LXC 105) : meme correction que le portfolio (2026-10-23). Le runner self-hosted est retire et remplace par `watchlist-autodeploy.timer` (toutes les 3 minutes) : le serveur interroge GitHub, ne deploie un commit que si sa CI est verte, puis reconstruit la stack. Le script et les unites sont versionnes dans `deploy/` du depot applicatif. Teste de bout en bout (commit pousse, CI verte, deploiement automatique). Cela clot la note du 3.8.0 sur le risque d'un runner self-hosted sur depot public.
 - Backup vzdump hebdomadaire du Beelink deplace du dimanche 03:00 au dimanche 14:00 : les arrets nocturnes tombaient 3 minutes apres le debut du backup. Gouverneur CPU en `powersave`.
 - Immich : 3.1.0 vers 3.2.4 (2026-10-04).
 - srv2 mis a jour (2026-10-23) : 20 paquets (correctifs de securite Debian : curl, expat, xz, bind9, ca-certificates ; Proxmox dont le noyau 7.0.14-25) puis redemarrage ; invites, NFS et Immich 3.2.4 verifies apres coup.

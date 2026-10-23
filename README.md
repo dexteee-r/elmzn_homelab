@@ -529,6 +529,7 @@ restic restore latest --target /restore --tag photos
 - [x] Durcissement des hôtes Proxmox : fail2ban, SSH par clé, mises à jour + redémarrage (noyau 7.0), NFS restreint, Samba désactivé ; Immich 3.2.4 (2026-10-04)
 - [x] Portail `home.elmzn.be` : refonte de l'interface + pastilles d'état en direct (2026-10-05)
 - [x] Déploiement du portfolio : runner self-hosted remplacé par un timer systemd `elmzn-deploy` (2026-10-10)
+- [x] Déploiement de `watchlist` : runner self-hosted remplacé par un timer systemd (tirage depuis le serveur, conditionné à une CI verte) (2026-10-23)
 - [x] Vaultwarden en ligne sur `vault.elmzn.be` (inscriptions fermées, 2FA, backup vzdump quotidien) (2026-10-15)
 - [x] Correctifs de sécurité d'octobre : PHP 8.4.27 (Checkmk), Node 22 (linktree-host), Node 24.22.1 (portfolio) (2026-10-22)
 - [x] Accès des amis à une salle de jeu multijoueur du LAN via WireGuard, pare-feu par client, sans port ouvert (2026-10-23)
