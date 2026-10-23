@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - srv2 mis a jour (2026-10-23) : 20 paquets (correctifs de securite Debian : curl, expat, xz, bind9, ca-certificates ; Proxmox dont le noyau 7.0.14-25) puis redemarrage ; invites, NFS et Immich 3.2.4 verifies apres coup.
 - srv2 : quota du dataset ZFS `data-pool/backups` releve de 700 a 800 Go (il etait a 91 %, un quota plein avait deja bloque un backup Immich pendant plus de 11 h).
 
+#### Removed
+- Prometheus et Grafana retires de vm-intranet (inutilises, la supervision passe par Checkmk) : conteneurs et volumes supprimes le 2026-10-23. Reste `node_exporter`.
+
 #### Notes
 - **Incident (2026-10-18 au 23)** : le LXC 102 `lxc-web` est reste verrouille et arrete 5 jours apres un arret de l'hote pendant un vzdump (snapshot-delete orphelin). Repare le 2026-10-23. Regle : ne jamais eteindre un hote pendant un backup, et verifier `pct list` (colonne Lock) apres tout arret.
 - **Strategie de sauvegarde, constat** : le depot Restic d'Immich (~640 Go) est sur le meme disque ZFS que les photos (~600 Go). Il protege d'une erreur ou d'un bug applicatif, pas d'une panne du disque, et double l'espace occupe. Decision : le conserver tel quel en attendant une machine de sauvegarde dediee (support separe, idealement en miroir, d'au moins 4 To). A court terme : snapshots ZFS sur `photos`, et sauvegarde des petites donnees vitales (dump de la base Immich, vzdump des invites) sur le disque systeme.

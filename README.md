@@ -35,7 +35,7 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ✅ **Stockage photos famille** (Immich) - 2 TB disponible
 - ✅ **Partage fichiers** (Nextcloud - non déployé, prévu)
 - ✅ **VMs laboratoire** (Debian test) - apprentissage
-- ✅ **Monitoring** (Prometheus + Grafana)
+- ✅ **Monitoring** (Checkmk, LXC 108)
 - ⚠️ **Accès distant** (OpenVPN - inactif)
 - ✅ **Reverse proxy SSL** (Nginx Proxy Manager)
 - ✅ **Hébergement web** (lxc-web — portail homelab `home.elmzn.be` (LAN only) + ancien portfolio Next.js `portfolio.elmzn.be`)
@@ -95,7 +95,7 @@ Box Internet (192.168.1.1)
    ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
    │  ├─ Proxmox host        : 192.168.1.200
    │  ├─ VM-INTRANET (101)   : 192.168.1.201
-   │  │   └─ Services : NPM, Immich, Grafana, Prometheus, node_exporter
+   │  │   └─ Services : NPM, Immich, node_exporter
    │  ├─ LXC minecraft-cobblemon (200) : 192.168.1.202
    │  │   └─ Serveurs : cobbleverse★ (Fabric), cobblemon-academy (Fabric), demon-slayer (Forge)
    │  └─ LXC filestore (201) : 192.168.1.203
@@ -145,8 +145,6 @@ Box Internet (192.168.1.1)
 |---------|-----------|-------------|
 | **Immich** | https://immich.intranet.elmzn.be | Gestion photos famille (2 TB) |
 | **Nginx Proxy Manager** | :81 | Reverse proxy local + SSL |
-| **Grafana** | :3000 | Dashboards monitoring |
-| **Prometheus** | :9090 | Collecte métriques |
 | **PostgreSQL** | :5432 (interne) | Base de données Immich (pgvecto-rs:pg14) |
 | **Redis** | :6379 (interne) | Cache Immich (redis:6.2-alpine) |
 | **Node Exporter** | :9100 | Métriques système |
@@ -265,13 +263,11 @@ nano /srv/intranet/.env
 
 # Générer passwords forts
 openssl rand -base64 32  # Pour DB_PASSWORD
-openssl rand -base64 32  # Pour GRAFANA_PASSWORD
 ```
 
 **Contenu `.env` minimal:**
 ```bash
 DB_PASSWORD=ton_password_postgres_32_chars
-GRAFANA_PASSWORD=ton_password_grafana_32_chars
 ```
 
 #### **4. Monter NFS depuis Proxmox host**
@@ -340,8 +336,6 @@ Password: changeme
 
 Répéter pour:
 - `npm.intranet.elmzn.be` → `npm:81`
-- `grafana.intranet.elmzn.be` → `grafana:3000`
-- `prometheus.intranet.elmzn.be` → `prometheus:9090`
 
 #### **7. Configurer Immich**
 ```
@@ -395,7 +389,6 @@ docker compose down
 
 # Voir logs
 docker compose logs -f immich_server
-docker compose logs -f grafana
 
 # Redémarrer service
 docker compose restart immich_server
@@ -470,7 +463,7 @@ restic restore latest --target /restore --tag photos
 1. **Box Firewall** - Ports 80/443 UNIQUEMENT vers Machine #1
 2. **UFW** - SSH LAN only, HTTP/HTTPS ouvert, tout le reste bloqué (vm-extranet ✅)
 3. **Fail2ban** - SSH ban 24h, Nginx auth/rate-limit ban 1h (vm-extranet ✅) ; fail2ban + SSH par clé uniquement sur les hôtes Proxmox, NFS restreint à vm-intranet (2026-10-04)
-4. **NPM Access Lists** - Grafana/Prometheus = LAN uniquement ; `elmzn.be` = LAN uniquement (403 pour le public)
+4. **NPM Access Lists** - `elmzn.be` = LAN uniquement (403 pour le public)
 5. **Application Auth** - Comptes + passwords forts
 
 > ✅ VPN WireGuard (subnet-router, LXC 103 sur Machine #1) opérationnel — accès à tout le LAN depuis l'extérieur. OpenVPN a été abandonné et n'a jamais été installé.
@@ -499,12 +492,7 @@ restic restore latest --target /restore --tag photos
 
 ## 📊 Monitoring
 
-**Accès Grafana:** `https://grafana.intranet.elmzn.be`
-
-**Dashboards:**
-- Node Exporter Full (CPU, RAM, Disk, Network)
-- Docker Monitoring (Containers)
-- Custom (Services uptime)
+**Supervision :** Checkmk (LXC 108, `monitoring`). Prometheus et Grafana ont été retirés de vm-intranet le 2026-10-23 (inutilisés).
 
 ---
 
@@ -516,7 +504,7 @@ restic restore latest --target /restore --tag photos
 - [x] ZFS pool 4TB configuré avec quotas
 - [x] NFS + Samba opérationnels
 - [x] VM-INTRANET Debian 13 déployée
-- [x] Stack Docker complète (Immich, NPM, Grafana, Prometheus)
+- [x] Stack Docker complète (Immich, NPM ; Grafana et Prometheus retirés le 2026-10-23)
 - [x] Certificats SSL Let's Encrypt
 - [x] Proxy hosts NPM configurés
 - [x] Immich fonctionnel avec uploads
