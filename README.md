@@ -561,7 +561,8 @@ restic restore latest --target /restore --tag photos
 ### 📅 Prochaines Étapes
 
 - [ ] Machine de sauvegarde dédiée (support séparé, idéalement en miroir, ≥ 4 TB) : copie des photos, des fichiers et des invités Proxmox ; ensuite snapshots ZFS sur `photos`
-- [ ] Agrandir ou nettoyer le disque du LXC Minecraft (plein à ~92 %)
+- [ ] Récupérer l'espace du disque thin du LXC Minecraft (`fstrim` : le système de fichiers est à ~47 %, mais le volume LVM-thin affiche ~93 %)
+- [ ] Lancer un `zpool scrub` sur `data-pool` (dernier scrub : 2026-09-13)
 - [ ] Nextcloud déploiement
 - [ ] Uptime Kuma (monitoring uptime)
 - [ ] ddclient DDNS automatisé

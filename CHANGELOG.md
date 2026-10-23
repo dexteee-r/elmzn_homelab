@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Notes
 - **Incident (2026-10-18 au 23)** : le LXC 102 `lxc-web` est reste verrouille et arrete 5 jours apres un arret de l'hote pendant un vzdump (snapshot-delete orphelin). Repare le 2026-10-23. Regle : ne jamais eteindre un hote pendant un backup, et verifier `pct list` (colonne Lock) apres tout arret.
 - **Strategie de sauvegarde, constat** : le depot Restic d'Immich (~640 Go) est sur le meme disque ZFS que les photos (~600 Go). Il protege d'une erreur ou d'un bug applicatif, pas d'une panne du disque, et double l'espace occupe. Decision : le conserver tel quel en attendant une machine de sauvegarde dediee (support separe, idealement en miroir, d'au moins 4 To). A court terme : snapshots ZFS sur `photos`, et sauvegarde des petites donnees vitales (dump de la base Immich, vzdump des invites) sur le disque systeme.
-- srv2 n'avait aucun job vzdump. Avant la mise a jour de l'hote (2026-10-23), dumps manuels de vm-intranet (17 Go) et de `filestore` (323 Mo) dans `data-pool/backups/pre-upgrade`, integrite verifiee. Le LXC 200 `minecraft-cobblemon` n'est volontairement pas sauvegarde (choix assume) et son disque est plein a 92 %.
+- srv2 n'avait aucun job vzdump. Avant la mise a jour de l'hote (2026-10-23), dumps manuels de vm-intranet (17 Go) et de `filestore` (323 Mo) dans `data-pool/backups/pre-upgrade`, integrite verifiee. Le LXC 200 `minecraft-cobblemon` n'est volontairement pas sauvegarde (choix assume). Son volume LVM-thin affiche ~93 % d'occupation alors que le systeme de fichiers n'est qu'a ~47 % (blocs liberes jamais rendus au pool thin) : un `fstrim` les recuperera.
 
 ## [3.8.0] - 2026-10-01
 
