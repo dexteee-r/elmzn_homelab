@@ -206,7 +206,7 @@ Profils gérés par `mc-switch` :
 |---------|-------|---------|------------|
 | `data-pool/photos` | ~2 TB | ~602 GB | `/mnt/data-pool/photos` (NFS → vmIntranet) |
 | `data-pool/files` | 512 GB | ~397 GB | `/mnt/data-pool/files` (NFS → vmIntranet, + FileBrowser Quantum sur LXC 201) |
-| `data-pool/backups` | 800 GB | ~657 GB | `/mnt/data-pool/backups` (NFS → vmIntranet) — dépôt Restic d'Immich (~640 GB) + dumps temporaires `pre-upgrade` |
+| `data-pool/backups` | 800 GB | ~640 GB | `/mnt/data-pool/backups` (NFS → vmIntranet) — dépôt Restic d'Immich |
 | `data-pool/media` | 512 GB | 0 | `/mnt/data-pool/media` (NFS → vmIntranet) |
 
 ### **Stockage ZimaOS (Machine #3)**
@@ -534,7 +534,7 @@ restic restore latest --target /restore --tag photos
 - [x] Accès des amis à une salle de jeu multijoueur du LAN via WireGuard, pare-feu par client, sans port ouvert (2026-10-23)
 - [x] Checkmk : 8 hôtes piggyback + surveillance HTTP/certificats des sous-domaines publics (2026-10-23)
 - [x] Stabilité du Beelink : backup hebdomadaire déplacé au dimanche 14:00, log thermique en place, LXC 102 réparé après un verrou vzdump (2026-10-23)
-- [x] Audit de srv2 (2026-10-23) : SSH durci, NFS restreint, ZFS sain ; quota `backups` porté à 800 GB ; dumps `pre-upgrade` de vm-intranet et filestore
+- [x] Audit de srv2 (2026-10-23) : SSH durci, NFS restreint, ZFS sain ; quota `backups` porté à 800 GB ; dumps `pre-upgrade` de vm-intranet et filestore (supprimés après la mise à jour réussie)
 - [x] srv2 mis à jour (2026-10-23) : 20 paquets dont correctifs de sécurité Debian, noyau 7.0.14-25, redémarrage fait ; invités, NFS et Immich vérifiés après coup
 
 ### 🔄 En Cours
