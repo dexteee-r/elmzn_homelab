@@ -106,8 +106,8 @@ Box Internet (192.168.1.1)
    │  ├─ LXC filestore (201) : 192.168.1.203
    │  │   └─ files.elmzn.be (FileBrowser Quantum — dataset ZFS data-pool/files, LAN uniquement)
    │  └─ LXC nomad (202)     : 192.168.1.204 — 3 Go RAM, 2 cœurs, 16 Go + dataset data-pool/nomad
-   │      ├─ Project NOMAD (Docker) — Command Center :8080, Dozzle :9999, LAN uniquement
-   │      └─ Page de lecture du dépôt (nginx + docsify) :80
+   │      ├─ nomad.intranet.elmzn.be (Project NOMAD, Docker — Command Center :8080 ; Dozzle :9999 sans proxy)
+   │      └─ nomad-docs.intranet.elmzn.be (page de lecture du dépôt, nginx + docsify :80)
    │
    └─ Machine #3 : NAS — ZimaOS (ZIMA-CUBE ou similaire)
       └─ Services : NFS, Samba, ZeroTier, rclone, qBittorrent
@@ -157,8 +157,8 @@ Box Internet (192.168.1.1)
 | **Redis** | :6379 (interne) | Cache Immich (redis:6.2-alpine) |
 | **Node Exporter** | :9100 | Métriques système |
 | **files.elmzn.be** | 80 (LXC 201) | *FileBrowser Quantum* — stockage fichiers avec interface web, dataset ZFS `data-pool/files` (512 GB), LAN uniquement (Access List NPM) ✅ |
-| **Project NOMAD** | 8080 (LXC 202) | Serveur de connaissances hors ligne (Kiwix, Kolibri, cartes, notes…) — Docker via l'installeur officiel, contenu sur le dataset ZFS `data-pool/nomad` (quota 200 GB), LAN uniquement, isolé d'Immich ✅ |
-| **Doc project-nomad** | 80 (LXC 202) | Page de lecture du dépôt (nginx + docsify : menu, recherche, code source sous `/src/`), `git pull` mensuel + régénération par `project-nomad-pull.timer` ✅ |
+| **nomad.intranet.elmzn.be** | 8080 (LXC 202) | Serveur de connaissances hors ligne (Kiwix, Kolibri, cartes, notes…) — Docker via l'installeur officiel, contenu sur le dataset ZFS `data-pool/nomad` (quota 200 GB), LAN uniquement, isolé d'Immich ✅ |
+| **nomad-docs.intranet.elmzn.be** | 80 (LXC 202) | Page de lecture du dépôt (nginx + docsify : menu, recherche, code source sous `/src/`), `git pull` mensuel + régénération par `project-nomad-pull.timer` ✅ |
 
 ### **Machine #1 : EXTRANET**
 

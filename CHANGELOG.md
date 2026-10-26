@@ -17,7 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Page de lecture du depot sur `:80` (nginx + docsify) : accueil genere (version, dernier commit, liens, commandes utiles), menu de toutes les pages Markdown (doc utilisateur en tete, tests exclus), recherche, code source brut sous `/src/` (`.git` bloque).
 - `project-nomad-pull.timer` : `git pull --ff-only` du depot le 1er du mois a 10:00 (`Persistent=true`, srv2 n'etant pas allume en permanence), puis regeneration de la page. Refuse de tirer s'il trouve des modifications locales.
 
+- Proxy hosts sur le NPM intranet (vm-intranet) : `nomad.intranet.elmzn.be` -> `192.168.1.204:8080` et `nomad-docs.intranet.elmzn.be` -> `192.168.1.204:80`, certificat wildcard `*.intranet.elmzn.be` existant, Force SSL. Dozzle (`:9999`, sans authentification) volontairement non expose.
+
 #### Notes
+- `*.intranet.elmzn.be` resout publiquement vers une IP privee (`192.168.1.201`) : ces sous-domaines marchent depuis tout le LAN (telephones compris) et via le VPN, sans fichier hosts ni hairpin NAT, et restent injoignables depuis Internet. A privilegier pour tout nouveau service purement interne.
 - **Isolement volontaire** : NOMAD donne le socket Docker a 3 conteneurs (equivalent root sur l'hote) et se met a jour seul depuis des images `:latest`. Il est donc sur un LXC dedie plutot que sur vm-intranet, qui heberge Immich.
 - L'installeur utilise `/opt/project-nomad` comme dossier d'installation et de donnees : le clone du depot est a part, dans `/opt/project-nomad-src`.
 - Le `git pull` mensuel ne met a jour que le code et la doc ; l'application se met a jour depuis le Command Center ou `update_nomad.sh`.
