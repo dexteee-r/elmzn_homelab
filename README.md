@@ -17,7 +17,11 @@ Tu veux **reproduire** ce homelab ? Suis les **tutos pas à pas** :
 
 | Tuto | Ce que tu obtiens |
 |------|-------------------|
+| [Installer Proxmox](docs/tutos/installer-proxmox.md) | Un hyperviseur Proxmox VE prêt à accueillir VM et LXC |
+| [Serveur web](docs/tutos/serveur-web.md) | Un site servi en HTTPS derrière Nginx Proxy Manager |
 | [VPN WireGuard (subnet-router)](docs/tutos/vpn-wireguard-subnet-router.md) | Accès à tout le LAN homelab depuis l'extérieur |
+| [NAS ZimaOS](docs/tutos/nas-zimaos.md) | Un NAS domestique avec partages SMB/NFS |
+| [Serveur Minecraft](docs/tutos/serveur-minecraft.md) | Un serveur Minecraft multi-profils en LXC |
 
 Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README = la **vue d'ensemble**.
 
@@ -35,12 +39,11 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ✅ **Stockage photos famille** (Immich) - 2 TB disponible
 - ✅ **Partage fichiers** (Nextcloud - non déployé, prévu)
 - ✅ **VMs laboratoire** (Debian test) - apprentissage
-- ✅ **Monitoring** (Checkmk, LXC 108)
-- ⚠️ **Accès distant** (OpenVPN - inactif)
+- ✅ **Accès distant** (VPN WireGuard — subnet-router, LXC 103)
 - ✅ **Reverse proxy SSL** (Nginx Proxy Manager)
 - ✅ **Hébergement web** (lxc-web — portail homelab `home.elmzn.be` (LAN only) + ancien portfolio Next.js `portfolio.elmzn.be`)
-- ✅ **Portfolio personnel** (`elmzn.be` — Next.js/Docker, LXC dédié sur pve-extranet, CI/CD via runner GitHub Actions self-hosted durci + CMS Sveltia)
-- ✅ **Web app auto-hébergée** (`watchlist.elmzn.be` — *Series Tracker* : React/Vite + FastAPI + PostgreSQL, auto-déployée via runner GitHub Actions)
+- ✅ **Portfolio personnel** (`elmzn.be` — Next.js/Docker, LXC dédié sur pve-extranet, déploiement par tirage via timer systemd + CMS Sveltia)
+- ✅ **Web app auto-hébergée** (`watchlist.elmzn.be` — *Series Tracker* : React/Vite + FastAPI + PostgreSQL, déploiement par tirage conditionné à une CI verte)
 - ✅ **Gestionnaire de collection de cartes** (`mytcg.elmzn.be` — *MyTCG* : React + FastAPI + SQLite, stack native, auto-déploiement pull-based)
 - ✅ **Page link-in-bio** (`links.elmzn.be` — *linktree-host* : Node.js/Express + SQLite, [repo dédié](https://github.com/dexteee-r/linktree-host), en prod public depuis vm-extranet)
 - ⏸️ **Automatisation** (n8n — LXC dédié Docker, arrêté volontairement, inutilisé pour l'instant — configuration conservée pour reprise future)
@@ -48,11 +51,11 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
 - ✅ **NAS domestique** (ZimaOS — SMB, NFS, rclone, ZeroTier)
 - ✅ **Stockage fichiers avec interface web** (`files.elmzn.be` — FileBrowser Quantum, LAN uniquement)
-- 🟡 **Monitoring infrastructure** (Checkmk — LXC dédié, supervision Proxmox agentless, configuration en cours)
+- ✅ **Monitoring infrastructure** (Checkmk — LXC 108, supervision Proxmox agentless + HTTP/certificats des sites publics ; notifications et agents à venir)
 - 🔄 **Domotique** (Home Assistant — installé, config en cours)
 - 🔄 **DNS ad-blocker** (Pi-hole — installé, config en cours)
 - 🔄 **Mail server** (Poste.io — installé, config en cours)
-- 🔄 **Gestionnaire mots de passe** (Vaultwarden — LXC créé, config en cours)
+- ✅ **Gestionnaire mots de passe** (Vaultwarden — `vault.elmzn.be`, LXC 100, inscriptions fermées + 2FA)
 
 ---
 
@@ -78,7 +81,7 @@ Box Internet (192.168.1.1)
    │  │   ├─ home.elmzn.be (portail homelab statique — accès LAN uniquement)
    │  │   └─ portfolio.elmzn.be (Next.js SSR — PM2 :3001)
    │  ├─ LXC portfolio (104) : 192.168.1.114 — 2 Go RAM, 2 cœurs, 16 Go, Debian 12
-   │  │   └─ elmzn.be (portfolio personnel — Next.js/Docker, public, CI/CD runner self-hosted + CMS Sveltia)
+   │  │   └─ elmzn.be (portfolio personnel — Next.js/Docker, public, déploiement par tirage (timer systemd) + CMS Sveltia)
    │  ├─ LXC watchlist (105) : 192.168.1.115
    │  │   └─ watchlist.elmzn.be (Series Tracker — Docker : nginx+SPA / FastAPI / PostgreSQL)
    │  ├─ LXC n8n (106)       : 192.168.1.116 — 8 Go RAM, 4 cœurs, 32 Go — ⏸️ ARRÊTÉ (inutilisé, onboot désactivé)
@@ -88,9 +91,10 @@ Box Internet (192.168.1.1)
    │  │   └─ Ollama (qwen2.5:7b) — LLM local CPU, réseau interne Compose, aucun port publié
    │  ├─ LXC mytcg (107)     : 192.168.1.117 — 4 Go RAM, 2 cœurs, 20 Go
    │  │   └─ mytcg.elmzn.be (MyTCG — stack native : Nginx + FastAPI/uvicorn + SQLite)
-   │  ├─ LXC monitoring (108): 192.168.1.118 — 4 Go RAM, 2 cœurs, 20 Go — 🟡 en cours
+   │  ├─ LXC monitoring (108): 192.168.1.118 — 4 Go RAM, 2 cœurs, 20 Go
    │  │   └─ Checkmk (natif, OMD) — supervision Proxmox agentless, piggyback des 8 LXC/VM
-   │  └─ LXC vaultwarden (100): en cours de config
+   │  └─ LXC vaultwarden (100): 192.168.1.119
+   │      └─ vault.elmzn.be (Vaultwarden — public, inscriptions fermées)
    │
    ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
    │  ├─ Proxmox host        : 192.168.1.200
@@ -133,7 +137,7 @@ Box Internet (192.168.1.1)
 | **GPU** | NVIDIA GeForce GTX 980 (4 GB GDDR5) |
 | **Réseau** | Gigabit Ethernet |
 | **Alim** | 850W |
-| **PVE** | 9.1.1 (kernel 6.17.2-2-pve) |
+| **PVE** | 9.1 (noyau 7.0.14-25) |
 
 ---
 
@@ -145,7 +149,7 @@ Box Internet (192.168.1.1)
 |---------|-----------|-------------|
 | **Immich** | https://immich.intranet.elmzn.be | Gestion photos famille (2 TB) |
 | **Nginx Proxy Manager** | :81 | Reverse proxy local + SSL |
-| **PostgreSQL** | :5432 (interne) | Base de données Immich (pgvecto-rs:pg14) |
+| **PostgreSQL** | :5432 (interne) | Base de données Immich (VectorChord, depuis Immich 3.x) |
 | **Redis** | :6379 (interne) | Cache Immich (redis:6.2-alpine) |
 | **Node Exporter** | :9100 | Métriques système |
 | **files.elmzn.be** | 80 (LXC 201) | *FileBrowser Quantum* — stockage fichiers avec interface web, dataset ZFS `data-pool/files` (512 GB), LAN uniquement (Access List NPM) ✅ |
@@ -159,16 +163,16 @@ Box Internet (192.168.1.1)
 | **fail2ban** | — | Protection bruteforce (SSH + Nginx) |
 | **lxc-web — home.elmzn.be** | 80 | Portail homelab statique — LAN only (Access List NPM), déploiement par `git push` (bare repo + hook post-receive) |
 | **lxc-web — portfolio.elmzn.be** | 3001 (PM2) | Ancien portfolio Next.js SSR (standalone) ✅ |
-| **elmzn.be** | 3000 (LXC 104) | Portfolio personnel — Next.js/Docker (image `ghcr.io/dexteee-r/portfolio`), public, CI/CD via runner GitHub Actions self-hosted (déclenché uniquement après CI verte sur `main`, jamais sur les PR de fork), CMS Sveltia (OAuth GitHub), `www.elmzn.be` redirige en 301 ✅ |
-| **watchlist.elmzn.be** | 80 (LXC 105) | *Series Tracker* — web app Docker (nginx+React / FastAPI / PostgreSQL), auto-deploy GitHub Actions ✅ |
+| **elmzn.be** | 3000 (LXC 104) | Portfolio personnel — Next.js/Docker (image `ghcr.io/dexteee-r/portfolio`), public, déploiement par tirage (timer systemd `elmzn-deploy`, toutes les 2 min, aucun runner), CMS Sveltia (OAuth GitHub), `www.elmzn.be` redirige en 301 ✅ |
+| **watchlist.elmzn.be** | 80 (LXC 105) | *Series Tracker* — web app Docker (nginx+React / FastAPI / PostgreSQL), déploiement par tirage (`watchlist-autodeploy.timer`, toutes les 3 min, seulement si la CI est verte) ✅ |
 | **n8n** — `n8n.elmzn.be` | 5678 (LXC 106) | Automatisation workflows — Docker, éditeur/API restreints LAN/VPN (Access List NPM) — ⏸️ **ARRÊTÉ** (inutilisé pour l'instant, `onboot` désactivé, configuration conservée) |
 | **n8n** — `hooks.elmzn.be` | 5678 (LXC 106) | Webhooks n8n uniquement (`/webhook/*`) — public, pour intégrations externes — ⏸️ arrêté avec le reste du LXC |
 | **n8n** — `media.elmzn.be` | 8081 (LXC 106) | Fichiers statiques temporaires — lecture seule, purge auto 48h — ⏸️ arrêté avec le reste du LXC |
 | **Ollama** | 11434 (interne, LXC 106) | LLM local `qwen2.5:7b` — inférence CPU, joignable uniquement par n8n (réseau Compose), aucun port publié — ⏸️ arrêté avec le reste du LXC |
 | **mytcg.elmzn.be** | 80 (LXC 107) | *MyTCG* — gestionnaire de collection de cartes, stack native (Nginx + FastAPI/uvicorn + SQLite), auto-déploiement pull-based toutes les 5 min ✅ — code dans `/opt/mytcg` (aligné sur les autres services, dépôt resynchronisé), cotes EN + JP rafraîchies automatiquement tous les 3 jours |
-| **Checkmk** | :80 (LXC 108, IP directe) | Supervision infrastructure — natif (OMD), Special Agent Proxmox VE fonctionnel — 🟡 en cours (création des hôtes piggyback), pas encore exposé via NPM |
+| **Checkmk** | :80 (LXC 108, IP directe) | Supervision infrastructure — natif (OMD), Special Agent Proxmox VE + 8 hôtes piggyback + HTTP/certificats des sous-domaines publics ✅ — LAN uniquement, pas exposé via NPM |
 | **links.elmzn.be** | 3000 (interne, VM-EXTRANET) | *linktree-host* — page link-in-bio auto-hébergée (Node.js/Express + SQLite, stats par événement horodaté, backup CSV quotidien) — ✅ [repo dédié](https://github.com/dexteee-r/linktree-host), en prod, public (pas de LAN-only) |
-| **Vaultwarden** | — | 🔄 LXC créé, configuration en cours |
+| **vault.elmzn.be** | LXC 100 | *Vaultwarden* — gestionnaire de mots de passe, public, inscriptions fermées, 2FA, backup vzdump quotidien ✅ |
 | **VPN WireGuard** | 51820/udp (LXC 103) | Subnet-router (wg-easy) — accès à tout le LAN depuis l'extérieur ✅ |
 | **OpenVPN** | — | ⚠️ Abandonné au profit de WireGuard, jamais installé |
 | **ddclient** | — | ✅ DDNS automatisé, actif sur l'hôte `pve-extranet` |
@@ -248,8 +252,8 @@ cd /srv/intranet
 #### **2. Télécharger configuration**
 ```bash
 # Cloner le repo
-git clone https://github.com/TON_USER/media-server-home.git
-cd media-server-home
+git clone https://github.com/dexteee-r/elmzn_homelab.git
+cd elmzn_homelab
 
 # Copier docker-compose.yml
 cp configs/machine2-intranet/docker-compose.yml /srv/intranet/
@@ -460,10 +464,10 @@ restic restore latest --target /restore --tag photos
 
 ### **Architecture Defense in Depth**
 
-1. **Box Firewall** - Ports 80/443 UNIQUEMENT vers Machine #1
+1. **Box Firewall** - Ports 80/443 + 51820/udp (WireGuard) UNIQUEMENT, tous vers Machine #1
 2. **UFW** - SSH LAN only, HTTP/HTTPS ouvert, tout le reste bloqué (vm-extranet ✅)
 3. **Fail2ban** - SSH ban 24h, Nginx auth/rate-limit ban 1h (vm-extranet ✅) ; fail2ban + SSH par clé uniquement sur les hôtes Proxmox, NFS restreint à vm-intranet (2026-10-04)
-4. **NPM Access Lists** - `elmzn.be` = LAN uniquement (403 pour le public)
+4. **NPM Access Lists** - `home.elmzn.be`, `files.elmzn.be`, éditeur n8n = LAN uniquement (403 pour le public)
 5. **Application Auth** - Comptes + passwords forts
 
 > ✅ VPN WireGuard (subnet-router, LXC 103 sur Machine #1) opérationnel — accès à tout le LAN depuis l'extérieur. OpenVPN a été abandonné et n'a jamais été installé.
@@ -474,17 +478,12 @@ restic restore latest --target /restore --tag photos
 
 ## 💾 Backups
 
-### **Stratégie**
+### **En place**
 
-- **Quotidien:** Configs Docker, DB PostgreSQL
-- **Hebdomadaire:** Photos Immich (incrémental)
-- **Mensuel:** Fichiers complets
-- **Rétention:** 7 daily, 4 weekly, 6 monthly
-
-### **Destinations**
-
-- **Local:** Machine #1 (500 GB HDD)
-- **Offsite:** À implémenter (Backblaze B2)
+- **Machine #1 (Beelink) :** job vzdump hebdomadaire de tous les invités (dimanche 14:00, zstd, mode snapshot) + job quotidien pour Vaultwarden (03:30), sur le disque local
+- **Machine #2 (srv2) :** dépôt Restic d'Immich (cron) dans `data-pool/backups` ; **aucun job vzdump** pour vm-intranet et filestore
+- **MyTCG :** dump nocturne de la base SQLite (timer `mytcg-backup`)
+- **Hors site / cloud :** aucun (choix assumé, pas de cloud)
 
 > ⚠️ **Limite connue (2026-10-23) :** le dépôt Restic d'Immich est sur le même disque ZFS que les photos. Il protège d'une erreur ou d'un bug applicatif, pas d'une panne de ce disque. Une machine de sauvegarde dédiée (support séparé) est à prévoir ; voir « Prochaines Étapes ». Le LXC Minecraft n'est volontairement pas sauvegardé.
 
@@ -541,7 +540,7 @@ restic restore latest --target /restore --tag photos
 ### 🔄 En Cours
 
 - [ ] Monitoring Checkmk (LXC 108) — reste : mot de passe `cmkadmin`, notifications e-mail, agents/logs, supervision de vzdump
-- [ ] Backups automatisés — srv2 n'a aucun job vzdump ; n8n, MyTCG, linktree-host et filestore n'ont aucun backup Proxmox
+- [ ] Backups automatisés — srv2 n'a aucun job vzdump (vm-intranet, filestore) ; le Beelink est couvert par le job hebdomadaire
 - [ ] Vaultwarden — reste : copie hors machine des dumps
 - [ ] Home Assistant — configuration domotique
 - [ ] Pi-hole — configuration DNS ad-blocker
@@ -550,10 +549,8 @@ restic restore latest --target /restore --tag photos
 ### 📅 Prochaines Étapes
 
 - [ ] Machine de sauvegarde dédiée (support séparé, idéalement en miroir, ≥ 4 TB) : copie des photos, des fichiers et des invités Proxmox ; ensuite snapshots ZFS sur `photos`
-- [ ] Lancer un `zpool scrub` sur `data-pool` (dernier scrub : 2026-09-13)
+- [ ] Confirmer le résultat du `zpool scrub` de `data-pool` lancé le 2026-10-23 (0 erreur attendu)
 - [ ] Nextcloud déploiement
-- [ ] Uptime Kuma (monitoring uptime)
-- [ ] ddclient DDNS automatisé
 
 ---
 
@@ -595,7 +592,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 23 octobre 2026 (durcissement sécurité, monitoring Checkmk, accès VPN des amis, audit de srv2 et constat sur la stratégie de sauvegarde)
+**Dernière mise à jour:** 26 octobre 2026 (resynchronisation du README avec l'infra réelle : déploiements par tirage, Vaultwarden, Checkmk, sauvegardes)
 **Version architecture:** 3.2 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---
@@ -603,32 +600,3 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 <div align="center">
   <b>Made with ❤️ for learning and family</b>
 </div>
-```
-
----
-
-## 2️⃣ LICENSE (MIT)
-
-Crée fichier `LICENSE` à la racine:
-```
-MIT License
-
-Copyright (c) 2025 @dexteee-r
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.

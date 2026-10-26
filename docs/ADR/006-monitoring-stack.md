@@ -1,5 +1,7 @@
 # ADR-006 — Choix de la stack de monitoring : **Prometheus + Grafana**
 
+> ⚠️ **Remplacée (2026-10-26) :** la supervision passe désormais par **Checkmk** (LXC 108 sur Machine #1), choisi en août 2026 face à Netdata pour son intégration Proxmox sans agent (un seul accès API découvre toutes les VM/LXC). Prometheus et Grafana ont été retirés de vm-intranet le 2026-10-23 ; seul `node_exporter` y tourne encore. Cette ADR est conservée pour l'historique. Pour l'état réel, voir `README.md`.
+
 ## 📘 Contexte
 
 Le projet **media-server-home** fonctionne sur un hôte **Proxmox VE** avec deux VMs Debian 12 :

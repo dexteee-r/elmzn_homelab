@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.9.1] - 2026-10-26
+
+### Resynchronisation de la documentation avec l'infra reelle
+
+#### Added
+- Fichier `LICENSE` (MIT), annonce dans le README mais absent du depot.
+
+#### Changed
+- README : deploiements du portfolio et de `watchlist` decrits par tirage (timers systemd) au lieu du runner self-hosted ; Vaultwarden, Checkmk et l'acces distant WireGuard marques operationnels ; noyau de srv2 et base Immich (VectorChord) mis a jour ; section Backups reecrite selon les jobs reels ; liste des tutos completee ; restes d'un brouillon retires en fin de fichier.
+- ADR-006 (Prometheus + Grafana) marquee comme remplacee par Checkmk.
+
+#### Notes
+- Backup vzdump hebdomadaire du Beelink du 2026-10-25 14:00 termine en OK, aucun invite verrouille.
+
 ## [3.9.0] - 2026-10-23
 
 ### Durcissement securite, monitoring, acces amis par VPN, stabilite et strategie de sauvegarde
