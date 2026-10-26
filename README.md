@@ -535,6 +535,7 @@ restic restore latest --target /restore --tag photos
 - [x] Checkmk : 8 hôtes piggyback + surveillance HTTP/certificats des sous-domaines publics (2026-10-23)
 - [x] Stabilité du Beelink : backup hebdomadaire déplacé au dimanche 14:00, log thermique en place, LXC 102 réparé après un verrou vzdump (2026-10-23)
 - [x] Audit de srv2 (2026-10-23) : SSH durci, NFS restreint, ZFS sain ; quota `backups` porté à 800 GB ; dumps `pre-upgrade` de vm-intranet et filestore (supprimés après la mise à jour réussie)
+- [x] `zpool scrub` de `data-pool` : 0 octet réparé, 0 erreur (terminé le 2026-10-23 en 3 h 07)
 - [x] srv2 mis à jour (2026-10-23) : 20 paquets dont correctifs de sécurité Debian, noyau 7.0.14-25, redémarrage fait ; invités, NFS et Immich vérifiés après coup
 
 ### 🔄 En Cours
@@ -549,7 +550,6 @@ restic restore latest --target /restore --tag photos
 ### 📅 Prochaines Étapes
 
 - [ ] Machine de sauvegarde dédiée (support séparé, idéalement en miroir, ≥ 4 TB) : copie des photos, des fichiers et des invités Proxmox ; ensuite snapshots ZFS sur `photos`
-- [ ] Confirmer le résultat du `zpool scrub` de `data-pool` lancé le 2026-10-23 (0 erreur attendu)
 - [ ] Nextcloud déploiement
 
 ---

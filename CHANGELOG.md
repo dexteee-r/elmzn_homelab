@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Notes
 - Backup vzdump hebdomadaire du Beelink du 2026-10-25 14:00 termine en OK, aucun invite verrouille.
+- Scrub ZFS de `data-pool` (srv2) lance le 2026-10-23 : termine en 3 h 07, 0 octet repare, 0 erreur.
 
 ## [3.9.0] - 2026-10-23
 
