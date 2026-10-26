@@ -99,9 +99,9 @@ Box Internet (192.168.1.1)
    │
    ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
    │  ├─ Proxmox host        : 192.168.1.200
-   │  ├─ VM-INTRANET (101)   : 192.168.1.201
+   │  ├─ VM-INTRANET (101)   : 192.168.1.201 — 4 Go RAM, 3 cœurs
    │  │   └─ Services : NPM, Immich, node_exporter
-   │  ├─ LXC minecraft-cobblemon (200) : 192.168.1.202
+   │  ├─ LXC minecraft-cobblemon (200) : 192.168.1.202 — ⏸️ arrêté par défaut, démarré à la main pour jouer (8 Go max)
    │  │   └─ Serveurs : cobbleverse★ (Fabric), cobblemon-academy (Fabric), demon-slayer (Forge)
    │  ├─ LXC filestore (201) : 192.168.1.203
    │  │   └─ files.elmzn.be (FileBrowser Quantum — dataset ZFS data-pool/files, LAN uniquement)
@@ -200,7 +200,7 @@ Box Internet (192.168.1.1)
 
 | Service | IP | Description |
 |---------|-----|-------------|
-| **minecraft-cobblemon** | 192.168.1.202:25565 | Serveur Minecraft (Fabric/Forge) |
+| **minecraft-cobblemon** | 192.168.1.202:25565 | Serveur Minecraft (Fabric/Forge) — pas de démarrage auto : démarrer le LXC 200 dans Proxmox pour jouer, l'arrêter après. Java en `-Xms2G -Xmx6G` |
 
 Profils gérés par `mc-switch` :
 

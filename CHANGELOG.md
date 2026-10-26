@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.10.1] - 2026-10-26
+
+### Liberation de RAM sur srv2
+
+#### Changed
+- LXC 200 `minecraft-cobblemon` : demarrage automatique desactive (on l'allume dans Proxmox pour jouer, on l'eteint apres), limite memoire 12 -> 8 Go. Java des 3 profils passe de `-Xms10G -Xmx10G` a `-Xms2G -Xmx6G` (anciens `start.sh` gardes en `.bak`). Le serveur reservait 7,4 Go en continu, sans joueur.
+- VM 101 `vm-intranet` : RAM 6 -> 4 Go (en utilisait ~2,5). Redemarrage fait, NFS, Immich et NPM intranet verifies.
+
+#### Notes
+- RAM disponible sur srv2 : ~1,8 Go -> ~8,9 Go (Minecraft eteint). Prepare l'arrivee d'une VM Windows 11 (non permanente).
+- A verifier a la prochaine partie : que le pack cobbleverse tient dans 6 Go de heap ; sinon remonter `-Xmx` (8 Go max avec la limite du LXC).
+
 ## [3.10.0] - 2026-10-26
 
 ### Deploiement de Project NOMAD (srv2)
