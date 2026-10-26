@@ -51,6 +51,7 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 - ✅ **Serveur Minecraft** (LXC minecraft-cobblemon, 3 profils)
 - ✅ **NAS domestique** (ZimaOS — SMB, NFS, rclone, ZeroTier)
 - ✅ **Stockage fichiers avec interface web** (`files.elmzn.be` — FileBrowser Quantum, LAN uniquement)
+- ✅ **Bibliothèque de connaissances hors ligne** (*Project NOMAD* — Wikipédia, livres, cartes, cours, LXC 202, LAN uniquement) + page de lecture de son dépôt
 - ✅ **Monitoring infrastructure** (Checkmk — LXC 108, supervision Proxmox agentless + HTTP/certificats des sites publics ; notifications et agents à venir)
 - 🔄 **Domotique** (Home Assistant — installé, config en cours)
 - 🔄 **DNS ad-blocker** (Pi-hole — installé, config en cours)
@@ -102,8 +103,11 @@ Box Internet (192.168.1.1)
    │  │   └─ Services : NPM, Immich, node_exporter
    │  ├─ LXC minecraft-cobblemon (200) : 192.168.1.202
    │  │   └─ Serveurs : cobbleverse★ (Fabric), cobblemon-academy (Fabric), demon-slayer (Forge)
-   │  └─ LXC filestore (201) : 192.168.1.203
-   │      └─ files.elmzn.be (FileBrowser Quantum — dataset ZFS data-pool/files, LAN uniquement)
+   │  ├─ LXC filestore (201) : 192.168.1.203
+   │  │   └─ files.elmzn.be (FileBrowser Quantum — dataset ZFS data-pool/files, LAN uniquement)
+   │  └─ LXC nomad (202)     : 192.168.1.204 — 3 Go RAM, 2 cœurs, 16 Go + dataset data-pool/nomad
+   │      ├─ Project NOMAD (Docker) — Command Center :8080, Dozzle :9999, LAN uniquement
+   │      └─ Page de lecture du dépôt (nginx + docsify) :80
    │
    └─ Machine #3 : NAS — ZimaOS (ZIMA-CUBE ou similaire)
       └─ Services : NFS, Samba, ZeroTier, rclone, qBittorrent
@@ -153,6 +157,8 @@ Box Internet (192.168.1.1)
 | **Redis** | :6379 (interne) | Cache Immich (redis:6.2-alpine) |
 | **Node Exporter** | :9100 | Métriques système |
 | **files.elmzn.be** | 80 (LXC 201) | *FileBrowser Quantum* — stockage fichiers avec interface web, dataset ZFS `data-pool/files` (512 GB), LAN uniquement (Access List NPM) ✅ |
+| **Project NOMAD** | 8080 (LXC 202) | Serveur de connaissances hors ligne (Kiwix, Kolibri, cartes, notes…) — Docker via l'installeur officiel, contenu sur le dataset ZFS `data-pool/nomad` (quota 200 GB), LAN uniquement, isolé d'Immich ✅ |
+| **Doc project-nomad** | 80 (LXC 202) | Page de lecture du dépôt (nginx + docsify : menu, recherche, code source sous `/src/`), `git pull` mensuel + régénération par `project-nomad-pull.timer` ✅ |
 
 ### **Machine #1 : EXTRANET**
 
@@ -212,6 +218,7 @@ Profils gérés par `mc-switch` :
 | `data-pool/files` | 512 GB | ~397 GB | `/mnt/data-pool/files` (NFS → vmIntranet, + FileBrowser Quantum sur LXC 201) |
 | `data-pool/backups` | 800 GB | ~640 GB | `/mnt/data-pool/backups` (NFS → vmIntranet) — dépôt Restic d'Immich |
 | `data-pool/media` | 512 GB | 0 | `/mnt/data-pool/media` (NFS → vmIntranet) |
+| `data-pool/nomad` | 200 GB | ~0 | `/mnt/data-pool/nomad` (monté dans LXC 202 sur `/opt/project-nomad`) — contenu Project NOMAD |
 
 ### **Stockage ZimaOS (Machine #3)**
 
@@ -535,6 +542,7 @@ restic restore latest --target /restore --tag photos
 - [x] Checkmk : 8 hôtes piggyback + surveillance HTTP/certificats des sous-domaines publics (2026-10-23)
 - [x] Stabilité du Beelink : backup hebdomadaire déplacé au dimanche 14:00, log thermique en place, LXC 102 réparé après un verrou vzdump (2026-10-23)
 - [x] Audit de srv2 (2026-10-23) : SSH durci, NFS restreint, ZFS sain ; quota `backups` porté à 800 GB ; dumps `pre-upgrade` de vm-intranet et filestore (supprimés après la mise à jour réussie)
+- [x] Project NOMAD déployé sur srv2 — LXC 202 dédié (isolé d'Immich, l'appli a accès au socket Docker), contenu sur `data-pool/nomad`, + page de lecture du dépôt mise à jour chaque mois (2026-10-26)
 - [x] `zpool scrub` de `data-pool` : 0 octet réparé, 0 erreur (terminé le 2026-10-23 en 3 h 07)
 - [x] srv2 mis à jour (2026-10-23) : 20 paquets dont correctifs de sécurité Debian, noyau 7.0.14-25, redémarrage fait ; invités, NFS et Immich vérifiés après coup
 
@@ -592,7 +600,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 26 octobre 2026 (resynchronisation du README avec l'infra réelle : déploiements par tirage, Vaultwarden, Checkmk, sauvegardes)
+**Dernière mise à jour:** 26 octobre 2026 (resynchronisation du README avec l'infra réelle ; déploiement de Project NOMAD sur srv2)
 **Version architecture:** 3.2 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.10.0] - 2026-10-26
+
+### Deploiement de Project NOMAD (srv2)
+
+#### Added
+- LXC 202 `nomad` sur srv2 (192.168.1.204, Debian 12, 2 coeurs, 3 Go de RAM, 16 Go, non privilegie, `nesting=1,keyctl=1`, demarrage auto) : Project NOMAD installe avec l'installeur officiel (Docker, 6 conteneurs : admin, MySQL, Redis, Dozzle, updater, disk-collector). Command Center sur `:8080`, logs Dozzle sur `:9999`, LAN uniquement.
+- Dataset ZFS `data-pool/nomad` (quota 200 Go) monte sur `/opt/project-nomad` dans le LXC : le contenu hors ligne (Wikipedia, cartes, livres) va sur le disque de 4 To, pas sur le SSD.
+- Page de lecture du depot sur `:80` (nginx + docsify) : accueil genere (version, dernier commit, liens, commandes utiles), menu de toutes les pages Markdown (doc utilisateur en tete, tests exclus), recherche, code source brut sous `/src/` (`.git` bloque).
+- `project-nomad-pull.timer` : `git pull --ff-only` du depot le 1er du mois a 10:00 (`Persistent=true`, srv2 n'etant pas allume en permanence), puis regeneration de la page. Refuse de tirer s'il trouve des modifications locales.
+
+#### Notes
+- **Isolement volontaire** : NOMAD donne le socket Docker a 3 conteneurs (equivalent root sur l'hote) et se met a jour seul depuis des images `:latest`. Il est donc sur un LXC dedie plutot que sur vm-intranet, qui heberge Immich.
+- L'installeur utilise `/opt/project-nomad` comme dossier d'installation et de donnees : le clone du depot est a part, dans `/opt/project-nomad-src`.
+- Le `git pull` mensuel ne met a jour que le code et la doc ; l'application se met a jour depuis le Command Center ou `update_nomad.sh`.
+- Pas de backup vzdump (srv2 n'a aucun job) ; le contenu est re-telechargeable.
+
 ## [3.9.1] - 2026-10-26
 
 ### Resynchronisation de la documentation avec l'infra reelle
