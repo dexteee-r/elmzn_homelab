@@ -97,7 +97,7 @@ Box Internet (192.168.1.1)
    │  └─ LXC vaultwarden (100): 192.168.1.119
    │      └─ vault.elmzn.be (Vaultwarden — public, inscriptions fermées)
    │
-   ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.1.1
+   ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.2.26
    │  ├─ Proxmox host        : 192.168.1.200
    │  ├─ VM-INTRANET (101)   : 192.168.1.201 — 4 Go RAM, 3 cœurs
    │  │   └─ Services : NPM, Immich, node_exporter
@@ -141,7 +141,7 @@ Box Internet (192.168.1.1)
 | **GPU** | NVIDIA GeForce GTX 980 (4 GB GDDR5) |
 | **Réseau** | Gigabit Ethernet |
 | **Alim** | 850W |
-| **PVE** | 9.1 (noyau 7.0.14-25) |
+| **PVE** | 9.2 (noyau 7.0.14-28) |
 
 ---
 
@@ -545,6 +545,7 @@ restic restore latest --target /restore --tag photos
 - [x] Project NOMAD déployé sur srv2 — LXC 202 dédié (isolé d'Immich, l'appli a accès au socket Docker), contenu sur `data-pool/nomad`, + page de lecture du dépôt mise à jour chaque mois (2026-10-26)
 - [x] `zpool scrub` de `data-pool` : 0 octet réparé, 0 erreur (terminé le 2026-10-23 en 3 h 07)
 - [x] srv2 mis à jour (2026-10-23) : 20 paquets dont correctifs de sécurité Debian, noyau 7.0.14-25, redémarrage fait ; invités, NFS et Immich vérifiés après coup
+- [x] Mise à jour de sécurité de tout le parc (2026-11-06) : correctif d'APT (DSA-6607-1, CVE-2026-109518) sur les 2 hôtes Proxmox et tous les invités, puis mises à jour complètes ; PVE 9.2.26, noyau 7.0.14-28 sur les 2 hôtes, noyau 6.12.115 sur `vm-extranet` et `vm-intranet`, tous redémarrés. Détail : `docs/JOURNAL DE BORD/2026-11-06-mise-a-jour-securite-parc.md`
 
 ### 🔄 En Cours
 
@@ -600,7 +601,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 26 octobre 2026 (resynchronisation du README avec l'infra réelle ; déploiement de Project NOMAD sur srv2)
+**Dernière mise à jour:** 6 novembre 2026 (mise à jour de sécurité de tout le parc : correctif d'APT, Proxmox 9.2.26, nouveaux noyaux)
 **Version architecture:** 3.2 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---

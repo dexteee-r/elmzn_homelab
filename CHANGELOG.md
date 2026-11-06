@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.11.0] - 2026-11-06
+
+### Mise a jour de securite de tout le parc (APT CVE-2026-109518)
+
+#### Changed
+- Correctif d'apt (DSA-6607-1, CVE-2026-109518 : remplacement d'un paquet apres sa verification par un attaquant sur le reseau, execution de code en root) sur les 2 hotes Proxmox et sur tous leurs invites : apt 3.0.3 -> 3.0.4 (Debian 13), 2.6.1 -> 2.6.2 (Debian 12), 2.8.3 -> 2.8.4ubuntu0.1 (Ubuntu 24.04). Applique en premier sur chaque machine, avant le reste.
+- Mises a jour completes de toutes les machines : autres correctifs de securite Debian (nss, brotli, vim) et mises a jour Proxmox. Plus aucun paquet en attente nulle part.
+- Hotes Proxmox (Beelink et srv2) : PVE 9.2.21 -> 9.2.26, noyau 7.0.14-28, redemarres. Tous les invites configures pour demarrer seuls sont revenus seuls.
+- VM Debian 13 `vm-extranet` et `vm-intranet` : noyau 6.12.115 (DSA-6602-1), redemarrees. Docker 29.9.3 et containerd 2.4 sur les machines qui en ont.
+- Conteneurs normalement eteints (`minecraft-cobblemon`, `n8n`) : demarres le temps de la mise a jour, puis eteints de nouveau (`onboot` inchange).
+- `vm-extranet` : ligne `fstab` obsolete `/mnt/logs` (export NFS disparu) commentee ; elle rallongeait le demarrage d'environ 90 s.
+
+#### Notes
+- Compte rendu detaille, versions avant/apres et procedure : `docs/JOURNAL DE BORD/2026-11-06-mise-a-jour-securite-parc.md`.
+- Une VM avec agent QEMU doit etre mise a jour via `systemd-run` : le paquet `qemu-guest-agent` relance l'agent et tuerait un `apt` lance par lui.
+- Debian ne cree pas `/var/run/reboot-required` : comparer `uname -r` aux `/boot/vmlinuz-*` pour savoir si un nouveau noyau attend un redemarrage.
+- Mettre a jour Docker redemarre tous les conteneurs de la machine (pas de `live-restore`) ; ils reviennent seuls grace a leur politique de redemarrage.
+- Sur un hote en EFI, la mise a jour de GRUB lance `grub-install` : sauvegarder la partition EFI avant et verifier `shimx64.efi` apres.
+- A surveiller au prochain lancement de Minecraft : Java est passe en Temurin 21.0.13 (meme version majeure).
+- A envisager : sources APT en `https://` (non fait).
+
 ## [3.10.1] - 2026-10-26
 
 ### Liberation de RAM sur srv2
