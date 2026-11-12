@@ -17,15 +17,15 @@
 Le schéma cible, avec les valeurs réelles de l'hôte **Intranet** du homelab (`srv2`) comme exemple. Adapte les IP / noms à ta machine.
 
 ```
-Machine Proxmox (exemple : srv2 — 192.168.1.200, PVE 9.1.1)
+Machine Proxmox (exemple : srv2 — <IP_SRV2>, PVE 9.1.1)
 ├─ Disque OS    : SSD/NVMe  → install Proxmox (ext4 ou ZFS root)
 ├─ Disque data  : HDD       → pool ZFS « data-pool » (~3.62 To)
 │   └─ datasets : data-pool/photos, data-pool/files, data-pool/backups, data-pool/media
-├─ Export NFS   : datasets exposés au LAN 192.168.1.0/24
-└─ VM Debian    : ex. 101 « vm-intranet » (192.168.1.201) → monte les NFS, fait tourner les services
+├─ Export NFS   : datasets exposés au LAN <LAN>/24
+└─ VM Debian    : ex. 101 « vm-intranet » (<IP_VM_INTRANET>) → monte les NFS, fait tourner les services
 ```
 
-> ℹ️ **Convention IP :** toutes les IP ci-dessous sont **privées LAN** (`192.168.1.x`), donc montrées en clair. Seule une **IP publique** se redacte (`<IP_PUBLIQUE>`) — il n'y en a aucune dans ce tuto.
+> ℹ️ **Convention IP :** toutes les adresses IP (publiques comme privées du LAN) sont redactées sous forme de placeholders `<IP_...>` (ex. `<IP_SRV2>`, `<LAN>/24`) : remplace-les par les tiennes. Ce tuto ne contient aucune IP publique.
 
 ## 🚶 Étapes
 
@@ -56,19 +56,19 @@ Keyboard           : French (Belgium) ou US
 
 Management Network :
   Hostname (FQDN) : srv2.local        # exemple — nom réel de l'hôte
-  IP Address      : 192.168.1.200/24  # IP fixe sur le LAN
-  Gateway         : 192.168.1.1        # la box
-  DNS             : 192.168.1.1        # ou 1.1.1.1
+  IP Address      : <IP_SRV2>/24  # IP fixe sur le LAN
+  Gateway         : <IP_BOX>        # la box
+  DNS             : <IP_BOX>        # ou 1.1.1.1
 ```
 
 Lancer l'installation (~10-15 min), retirer la clé, redémarrer.
 
 🔎 **Résultat attendu** — la web UI répond :
 ```
-https://192.168.1.200:8006
+https://<IP_SRV2>:8006
 → login : root  /  (mot de passe défini à l'install)
 ```
-✅ **Vérifie que :** tu te connectes à `https://192.168.1.200:8006` et que le nœud (`srv2`) apparaît dans l'arborescence.
+✅ **Vérifie que :** tu te connectes à `https://<IP_SRV2>:8006` et que le nœud (`srv2`) apparaît dans l'arborescence.
 
 ### Étape 3 — Activer le dépôt « no-subscription » (gratuit)
 *Pourquoi :* sans abonnement, le repo *enterprise* renvoie une erreur `401` à chaque `apt update`. Le repo **no-subscription** est gratuit et suffit pour un homelab.
@@ -186,10 +186,10 @@ Les chemins d'export = les mountpoints des datasets vus à l'Étape 4 (`/mnt/dat
 apt install -y nfs-kernel-server
 
 cat >> /etc/exports << 'EOF'
-/mnt/data-pool/photos   192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
-/mnt/data-pool/files    192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
-/mnt/data-pool/backups  192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
-/mnt/data-pool/media    192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
+/mnt/data-pool/photos   <LAN>/24(rw,sync,no_subtree_check,no_root_squash)
+/mnt/data-pool/files    <LAN>/24(rw,sync,no_subtree_check,no_root_squash)
+/mnt/data-pool/backups  <LAN>/24(rw,sync,no_subtree_check,no_root_squash)
+/mnt/data-pool/media    <LAN>/24(rw,sync,no_subtree_check,no_root_squash)
 EOF
 
 exportfs -ra
@@ -202,10 +202,10 @@ showmount -e localhost
 ```
 ```
 Export list for localhost:
-/mnt/data-pool/media    192.168.1.0/24
-/mnt/data-pool/backups  192.168.1.0/24
-/mnt/data-pool/files    192.168.1.0/24
-/mnt/data-pool/photos   192.168.1.0/24
+/mnt/data-pool/media    <LAN>/24
+/mnt/data-pool/backups  <LAN>/24
+/mnt/data-pool/files    <LAN>/24
+/mnt/data-pool/photos   <LAN>/24
 ```
 ✅ **Vérifie que :** les 4 exports `/mnt/data-pool/*` apparaissent dans `showmount -e localhost`.
 
@@ -225,7 +225,7 @@ Memory  : 6144 MB (6 Go) · Ballooning ✔
 Network : Bridge vmbr0 · Model VirtIO
 ```
 
-3. **Installer Debian** (console noVNC) : hostname `vm-intranet`, SSH server ✔, **pas** de bureau, IP fixe `192.168.1.201/24`.
+3. **Installer Debian** (console noVNC) : hostname `vm-intranet`, SSH server ✔, **pas** de bureau, IP fixe `<IP_VM_INTRANET>/24`.
 
 4. **Monter les NFS du host** dans la VM :
 
@@ -234,10 +234,10 @@ apt install -y nfs-common
 mkdir -p /mnt/photos /mnt/files /mnt/backups /mnt/media
 
 cat >> /etc/fstab << 'EOF'
-192.168.1.200:/mnt/data-pool/photos   /mnt/photos   nfs  defaults  0  0
-192.168.1.200:/mnt/data-pool/files    /mnt/files    nfs  defaults  0  0
-192.168.1.200:/mnt/data-pool/backups  /mnt/backups  nfs  defaults  0  0
-192.168.1.200:/mnt/data-pool/media    /mnt/media    nfs  defaults  0  0
+<IP_SRV2>:/mnt/data-pool/photos   /mnt/photos   nfs  defaults  0  0
+<IP_SRV2>:/mnt/data-pool/files    /mnt/files    nfs  defaults  0  0
+<IP_SRV2>:/mnt/data-pool/backups  /mnt/backups  nfs  defaults  0  0
+<IP_SRV2>:/mnt/data-pool/media    /mnt/media    nfs  defaults  0  0
 EOF
 
 mount -a
@@ -246,20 +246,20 @@ df -h | grep /mnt
 
 🔎 **Résultat attendu**
 ```
-⚠️ À VÉRIFIER — coller la vraie sortie `df -h | grep /mnt` depuis vm-intranet (.201).
-Attendu : les 4 montages 192.168.1.200:/mnt/data-pool/* présents.
+⚠️ À VÉRIFIER — coller la vraie sortie `df -h | grep /mnt` depuis vm-intranet.
+Attendu : les 4 montages <IP_SRV2>:/mnt/data-pool/* présents.
 ```
-✅ **Vérifie que :** la VM démarre, répond en SSH sur `192.168.1.201`, et que `mount -a` monte les 4 partages sans erreur.
+✅ **Vérifie que :** la VM démarre, répond en SSH sur `<IP_VM_INTRANET>`, et que `mount -a` monte les 4 partages sans erreur.
 
 ## ✅ Test final
 
 Bout-en-bout : écrire depuis la VM, lire depuis l'hôte.
 
 ```bash
-# Depuis la VM (192.168.1.201)
+# Depuis la VM (<IP_VM_INTRANET>)
 echo "ok-$(date +%s)" > /mnt/photos/test-nfs.txt
 
-# Depuis l'hôte Proxmox (192.168.1.200)
+# Depuis l'hôte Proxmox (<IP_SRV2>)
 cat /mnt/data-pool/photos/test-nfs.txt    # doit afficher la même ligne
 ```
 
@@ -272,7 +272,7 @@ Si le fichier écrit dans la VM apparaît côté hôte → **ZFS + NFS + VM fonc
 | `apt update` → erreur `401` | repo *enterprise* encore actif | Désactiver enterprise + ajouter no-subscription (Étape 3) |
 | `zpool create` → *device or resource busy* | disque monté / déjà partitionné | `wipefs -a /dev/sdX` après avoir confirmé que c'est **le bon disque** |
 | VM ne boote pas (écran noir UEFI) | EFI Disk manquant | Vérifier BIOS = OVMF (UEFI) **et** « Add EFI Disk » coché |
-| `mount -a` → *access denied* / *timeout* | export NFS absent ou pare-feu | `showmount -e 192.168.1.200` ; vérifier `/etc/exports` + `exportfs -ra` |
+| `mount -a` → *access denied* / *timeout* | export NFS absent ou pare-feu | `showmount -e <IP_SRV2>` ; vérifier `/etc/exports` + `exportfs -ra` |
 | `mount.nfs: Connection refused` | `nfs-common` non installé dans la VM | `apt install -y nfs-common` |
 
 ## ➡️ Et après
@@ -284,4 +284,4 @@ Si le fichier écrit dans la VM apparaît côté hôte → **ZFS + NFS + VM fonc
 
 ---
 
-> 🔧 **Sorties figées depuis `srv2` (2026-06-20).** Seul reste à confirmer le `df -h | grep /mnt` côté `vm-intranet` (.201) — bloc marqué `⚠️ À VÉRIFIER` à l'Étape 6.
+> 🔧 **Sorties figées depuis `srv2` (2026-06-20).** Seul reste à confirmer le `df -h | grep /mnt` côté `vm-intranet` — bloc marqué `⚠️ À VÉRIFIER` à l'Étape 6.

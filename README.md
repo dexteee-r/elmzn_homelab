@@ -62,50 +62,52 @@ Le **pourquoi** des choix d'architecture → [docs/ADR/](docs/ADR/). Ce README =
 
 ## 🗺️ Architecture
 
+> 🔒 Les adresses IP du réseau local ne sont pas publiées dans ce repo : elles sont remplacées par des placeholders `<IP_...>` (ex. `<IP_VM_EXTRANET>`, `<LAN>/24`). Remplace-les par celles de ton réseau.
+
 ### **Vue d'Ensemble**
 ```
 Internet (WAN)
     ↓
-Box Internet (192.168.1.1)
+Box Internet (<IP_BOX>)
 ├─ Port forwarding :
 │  ├─ 80/443 → Machine #1 (vm-extranet)
 │  └─ 51820/udp → Machine #1 (WireGuard — subnet-router, LXC 103)
 │
-└─ LAN (192.168.1.0/24)
+└─ LAN (<LAN>/24)
    │
    ├─ Machine #1 : EXTRANET (DMZ) — Beelink S12, PVE 9.1
-   │  ├─ Proxmox host        : 192.168.1.100
-   │  ├─ VM-EXTRANET (101)   : 192.168.1.111
+   │  ├─ Proxmox host        : <IP_PVE_EXTRANET>
+   │  ├─ VM-EXTRANET (101)   : <IP_VM_EXTRANET>
    │  │   └─ Services : NPM, UFW, fail2ban
    │  │       └─ linktree-host (Docker, port 3000 interne — `links.elmzn.be` en prod, public)
-   │  ├─ LXC lxc-web (102)   : 192.168.1.112
+   │  ├─ LXC lxc-web (102)   : <IP_LXC_WEB>
    │  │   ├─ home.elmzn.be (portail homelab statique — accès LAN uniquement)
    │  │   └─ portfolio.elmzn.be (Next.js SSR — PM2 :3001)
-   │  ├─ LXC portfolio (104) : 192.168.1.114 — 2 Go RAM, 2 cœurs, 16 Go, Debian 12
+   │  ├─ LXC portfolio (104) : <IP_LXC_PORTFOLIO> — 2 Go RAM, 2 cœurs, 16 Go, Debian 12
    │  │   └─ elmzn.be (portfolio personnel — Next.js/Docker, public, déploiement par tirage (timer systemd) + CMS Sveltia)
-   │  ├─ LXC watchlist (105) : 192.168.1.115
+   │  ├─ LXC watchlist (105) : <IP_LXC_WATCHLIST>
    │  │   └─ watchlist.elmzn.be (Series Tracker — Docker : nginx+SPA / FastAPI / PostgreSQL)
-   │  ├─ LXC n8n (106)       : 192.168.1.116 — 8 Go RAM, 4 cœurs, 32 Go — ⏸️ ARRÊTÉ (inutilisé, onboot désactivé)
+   │  ├─ LXC n8n (106)       : <IP_LXC_N8N> — 8 Go RAM, 4 cœurs, 32 Go — ⏸️ ARRÊTÉ (inutilisé, onboot désactivé)
    │  │   ├─ Automatisation self-hosted — Docker, port 5678
    │  │   │   n8n.elmzn.be (éditeur, LAN/VPN) + hooks.elmzn.be (webhooks, public)
    │  │   ├─ media.elmzn.be — fichiers statiques (port 8081, lecture seule)
    │  │   └─ Ollama (qwen2.5:7b) — LLM local CPU, réseau interne Compose, aucun port publié
-   │  ├─ LXC mytcg (107)     : 192.168.1.117 — 4 Go RAM, 2 cœurs, 20 Go
+   │  ├─ LXC mytcg (107)     : <IP_LXC_MYTCG> — 4 Go RAM, 2 cœurs, 20 Go
    │  │   └─ mytcg.elmzn.be (MyTCG — stack native : Nginx + FastAPI/uvicorn + SQLite)
-   │  ├─ LXC monitoring (108): 192.168.1.118 — 4 Go RAM, 2 cœurs, 20 Go
+   │  ├─ LXC monitoring (108): <IP_LXC_MONITORING> — 4 Go RAM, 2 cœurs, 20 Go
    │  │   └─ Checkmk (natif, OMD) — supervision Proxmox agentless, piggyback des 8 LXC/VM
-   │  └─ LXC vaultwarden (100): 192.168.1.119
+   │  └─ LXC vaultwarden (100): <IP_LXC_VAULTWARDEN>
    │      └─ vault.elmzn.be (Vaultwarden — public, inscriptions fermées)
    │
    ├─ Machine #2 : INTRANET (Privé) — Custom PC i7-6700, PVE 9.2.26
-   │  ├─ Proxmox host        : 192.168.1.200
-   │  ├─ VM-INTRANET (101)   : 192.168.1.201 — 4 Go RAM, 3 cœurs
+   │  ├─ Proxmox host        : <IP_SRV2>
+   │  ├─ VM-INTRANET (101)   : <IP_VM_INTRANET> — 4 Go RAM, 3 cœurs
    │  │   └─ Services : NPM, Immich, node_exporter
-   │  ├─ LXC minecraft-cobblemon (200) : 192.168.1.202 — ⏸️ arrêté par défaut, démarré à la main pour jouer (8 Go max)
+   │  ├─ LXC minecraft-cobblemon (200) : <IP_LXC_MINECRAFT> — ⏸️ arrêté par défaut, démarré à la main pour jouer (8 Go max)
    │  │   └─ Serveurs : cobbleverse★ (Fabric), cobblemon-academy (Fabric), demon-slayer (Forge)
-   │  ├─ LXC filestore (201) : 192.168.1.203
+   │  ├─ LXC filestore (201) : <IP_LXC_FILESTORE>
    │  │   └─ files.elmzn.be (FileBrowser Quantum — dataset ZFS data-pool/files, LAN uniquement)
-   │  └─ LXC nomad (202)     : 192.168.1.204 — 3 Go RAM, 2 cœurs, 16 Go + dataset data-pool/nomad
+   │  └─ LXC nomad (202)     : <IP_LXC_NOMAD> — 3 Go RAM, 2 cœurs, 16 Go + dataset data-pool/nomad
    │      ├─ nomad.intranet.elmzn.be (Project NOMAD, Docker — Command Center :8080 ; Dozzle :9999 sans proxy)
    │      └─ nomad-docs.intranet.elmzn.be (page de lecture du dépôt, nginx + docsify :80)
    │
@@ -200,7 +202,7 @@ Box Internet (192.168.1.1)
 
 | Service | IP | Description |
 |---------|-----|-------------|
-| **minecraft-cobblemon** | 192.168.1.202:25565 | Serveur Minecraft (Fabric/Forge) — pas de démarrage auto : démarrer le LXC 200 dans Proxmox pour jouer, l'arrêter après. Java en `-Xms2G -Xmx6G` |
+| **minecraft-cobblemon** | `<IP_LXC_MINECRAFT>`:25565 | Serveur Minecraft (Fabric/Forge) — pas de démarrage auto : démarrer le LXC 200 dans Proxmox pour jouer, l'arrêter après. Java en `-Xms2G -Xmx6G` |
 
 Profils gérés par `mc-switch` :
 
@@ -228,7 +230,7 @@ Profils gérés par `mc-switch` :
 | sda (HDD) | 465.8 GB | btrfs | `/DATA/.media/HDD-500GB` |
 
 **Partage réseau depuis ZimaOS :**
-- **NFS / Samba :** Accessible depuis LAN (192.168.1.0/24)
+- **NFS / Samba :** Accessible depuis LAN (`<LAN>`/24)
 - **ZeroTier :** Accès distant VPN mesh
 
 ---
@@ -249,7 +251,7 @@ Profils gérés par `mc-switch` :
 #### **1. Préparer l'environnement**
 ```bash
 # SSH vers VM-INTRANET
-ssh admin@192.168.1.201
+ssh admin@<IP_VM_INTRANET>
 
 # Créer structure
 sudo mkdir -p /srv/intranet
@@ -290,10 +292,10 @@ sudo mkdir -p /mnt/{photos,files,backups,media}
 sudo nano /etc/fstab
 
 # Ajouter ces lignes:
-192.168.1.200:/mnt/data-pool/photos  /mnt/photos  nfs defaults 0 0
-192.168.1.200:/mnt/data-pool/files   /mnt/files   nfs defaults 0 0
-192.168.1.200:/mnt/data-pool/backups /mnt/backups nfs defaults 0 0
-192.168.1.200:/mnt/data-pool/media   /mnt/media   nfs defaults 0 0
+<IP_SRV2>:/mnt/data-pool/photos  /mnt/photos  nfs defaults 0 0
+<IP_SRV2>:/mnt/data-pool/files   /mnt/files   nfs defaults 0 0
+<IP_SRV2>:/mnt/data-pool/backups /mnt/backups nfs defaults 0 0
+<IP_SRV2>:/mnt/data-pool/media   /mnt/media   nfs defaults 0 0
 
 # Monter tous
 sudo mount -a
@@ -320,7 +322,7 @@ docker compose ps
 
 **Première connexion NPM:**
 ```
-URL: http://192.168.1.201:81
+URL: http://<IP_VM_INTRANET>:81
 Email: admin@example.com
 Password: changeme
 
@@ -373,10 +375,6 @@ URL: https://immich.intranet.elmzn.be
 - 👉 [**docs/tutos/**](docs/tutos/) - Guides pas à pas reproductibles, alignés sur l'infra réelle : `installer-proxmox.md`, `serveur-web.md`, `vpn-wireguard-subnet-router.md`, `nas-zimaos.md`, `serveur-minecraft.md`
 - 📝 [**ADR/**](docs/ADR/) - Architecture Decision Records (le *pourquoi* des choix)
 
-### **Documentation Technique**
-
-- 📄 [**web-server-doc-v2.pdf**](docs/web-server-doc-v2.pdf) - Doc source ayant servi à rédiger `docs/tutos/serveur-web.md`
-
 ### **Archives (obsolètes, gardées pour historique — ne pas suivre)**
 
 - ⚠️ [**SETUP-MACHINE1.md**](docs/SETUP-MACHINE1.md) / [**SETUP-MACHINE2.md**](docs/SETUP-MACHINE2.md) - Plans **pré-migration** rédigés avant le passage à l'architecture actuelle (parlent encore de l'ancien Dell OptiPlex comme "Machine #1", d'OpenVPN, de Nextcloud...) — **jamais déployés tels quels**. Le vrai déroulé réel est dans [docs/MIGRATION-M1-vers-nouvelle-machine.md](docs/MIGRATION-M1-vers-nouvelle-machine.md) et dans `docs/tutos/installer-proxmox.md`.
@@ -411,7 +409,7 @@ docker compose ps
 ### **Gestion VMs & LXC Proxmox**
 ```bash
 # SSH vers Proxmox Machine #2 (INTRANET)
-ssh root@192.168.1.200   # srv2
+ssh root@<IP_SRV2>   # srv2
 
 # Lister VMs et LXC
 qm list && pct list
@@ -431,7 +429,7 @@ pct start 201
 pct stop 201
 
 # SSH vers Proxmox Machine #1 (EXTRANET)
-ssh root@192.168.1.100   # pve-extranet
+ssh root@<IP_PVE_EXTRANET>   # pve-extranet
 
 # LXC lxc-web (102) sur Machine #1
 pct start 102
@@ -601,7 +599,7 @@ Projet sous licence **MIT** - voir [LICENSE](LICENSE).
 
 ---
 
-**Dernière mise à jour:** 6 novembre 2026 (mise à jour de sécurité de tout le parc : correctif d'APT, Proxmox 9.2.26, nouveaux noyaux)
+**Dernière mise à jour:** 12 novembre 2026 (adresses IP du réseau local retirées de la documentation publique)
 **Version architecture:** 3.2 (3 machines EXTRANET/INTRANET/NAS ZimaOS)
 
 ---

@@ -15,8 +15,8 @@
 Un **LXC** sur l'hôte `srv2` fait tourner Java + le serveur Minecraft. Un script maison **`mc-switch`** gère plusieurs **profils** (un modpack = un dossier) et bascule le serveur actif via un **symlink**, le tout lancé par un **service systemd**.
 
 ```
-srv2 (192.168.1.200)
-└─ LXC 200 « minecraft-cobblemon » (192.168.1.202)
+srv2 (<IP_SRV2>)
+└─ LXC 200 « minecraft-cobblemon » (<IP_LXC_MINECRAFT>)
    ├─ /home/minecraft/servers/<profil>/   ← un dossier par modpack
    ├─ /home/minecraft/active-server       ← symlink vers le profil actif
    ├─ /bin/mc-switch                       ← bascule de profil
@@ -42,8 +42,8 @@ Crée un LXC avec cette config (la méthode `pct create` détaillée est dans le
 |-----------|--------|
 | VMID | `200` |
 | Hostname | `minecraft-cobblemon` |
-| Hôte Proxmox | `srv2` (192.168.1.200) |
-| IP | `192.168.1.202/24`, gw `192.168.1.1` |
+| Hôte Proxmox | `srv2` (`<IP_SRV2>`) |
+| IP | `<IP_LXC_MINECRAFT>/24`, gw `<IP_BOX>` |
 | RAM / Swap | 12 GB / 2 GB |
 | Cores | 4 |
 | Disque | 30 GB (local-lvm) |
@@ -102,12 +102,12 @@ journalctl -fu minecraft          # logs temps réel
 
 # Accès au conteneur
 pct exec 200 -- bash              # depuis srv2
-ssh root@192.168.1.202            # SSH direct
+ssh root@<IP_LXC_MINECRAFT>            # SSH direct
 ```
 
 ## ✅ Test final
 
-Depuis un client Minecraft, connecte-toi au serveur : `192.168.1.202:25565` (⚠️ À VÉRIFIER : port si modifié). Le monde du profil actif doit charger.
+Depuis un client Minecraft, connecte-toi au serveur : `<IP_LXC_MINECRAFT>:25565` (⚠️ À VÉRIFIER : port si modifié). Le monde du profil actif doit charger.
 
 ## 🆘 Dépannage
 

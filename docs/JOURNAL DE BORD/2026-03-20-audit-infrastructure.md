@@ -11,8 +11,8 @@ et mise à jour de la documentation du repo `elmzn_homelab`.
 
 | Machine | Hostname | IP Proxmox | PVE | Kernel |
 |---------|----------|-----------|-----|--------|
-| M1 (Dell OptiPlex 7040) | `pve` | 192.168.1.100 | 8.4.14 | 6.8.12-16-pve |
-| M2 (Custom PC i7-6700) | `srv2` | 192.168.1.200 | 9.1.1 | 6.17.2-2-pve |
+| M1 (Dell OptiPlex 7040) | `pve` | `<IP_PVE_EXTRANET>` | 8.4.14 | 6.8.12-16-pve |
+| M2 (Custom PC i7-6700) | `srv2` | `<IP_SRV2>` | 9.1.1 | 6.17.2-2-pve |
 
 ---
 
@@ -22,8 +22,8 @@ et mise à jour de la documentation du repo `elmzn_homelab`.
 
 | ID | Type | Nom | IP | RAM | CPU | Disque |
 |----|------|-----|----|-----|-----|--------|
-| 101 | VM | vm-extranet | 192.168.1.111 | 4 GB | 2 | 20 GB |
-| 102 | LXC | lxc-web | 192.168.1.112 | 512 MB | 2 | 8 GB |
+| 101 | VM | vm-extranet | `<IP_VM_EXTRANET>` | 4 GB | 2 | 20 GB |
+| 102 | LXC | lxc-web | `<IP_LXC_WEB>` | 512 MB | 2 | 8 GB |
 
 ZFS M1 :
 - `tank-hdd` : 464 GB (backups / logs / media / photos — 569 MB utilisé)
@@ -33,10 +33,10 @@ ZFS M1 :
 
 | ID | Type | Nom | IP | RAM | CPU | Disque |
 |----|------|-----|----|-----|-----|--------|
-| 101 | VM | vm-intranet | 192.168.1.201 | 6 GB | 3 | 40 GB |
-| 200 | LXC | minecraft-cobblemon | 192.168.1.202* | 12 GB | 4 | 30 GB |
+| 101 | VM | vm-intranet | `<IP_VM_INTRANET>` | 6 GB | 3 | 40 GB |
+| 200 | LXC | minecraft-cobblemon | `<IP_LXC_MINECRAFT>`* | 12 GB | 4 | 30 GB |
 
-*IP changée de 192.168.1.102 → 192.168.1.202 lors de cette session.
+*IP changée de `<IP_MC_OBSOLETE>` → `<IP_LXC_MINECRAFT>` lors de cette session.
 
 ZFS M2 :
 - `data-pool` : 3.62 TB (photos 9.57 GB utilisé, fichiers/backups/media vides)
@@ -45,7 +45,7 @@ ZFS M2 :
 
 ## Services Docker
 
-### vm-intranet (192.168.1.201)
+### vm-intranet (`<IP_VM_INTRANET>`)
 
 | Conteneur | Image | Ports |
 |-----------|-------|-------|
@@ -58,7 +58,7 @@ ZFS M2 :
 | grafana | grafana:latest | 3000 |
 | node_exporter | node-exporter:latest | 9100 |
 
-### vm-extranet (192.168.1.111)
+### vm-extranet (`<IP_VM_EXTRANET>`)
 
 | Conteneur | Image | Ports |
 |-----------|-------|-------|
@@ -92,6 +92,6 @@ ZFS M2 :
 
 1. **Relancer OpenVPN** sur vm-extranet et investiguer pourquoi il est inactif
 2. **Relancer ddclient** et vérifier la config DDNS elmzn.be
-3. **Changer l'IP du LXC Minecraft** : 192.168.1.102 → 192.168.1.202 (commandes préparées)
+3. **Changer l'IP du LXC Minecraft** : `<IP_MC_OBSOLETE>` → `<IP_LXC_MINECRAFT>` (commandes préparées)
 4. **Vérifier backup Minecraft** : inclure `/home/minecraft/servers/` dans Restic
 5. **Évaluer UFW** : nécessaire ou Proxmox FW suffit ?

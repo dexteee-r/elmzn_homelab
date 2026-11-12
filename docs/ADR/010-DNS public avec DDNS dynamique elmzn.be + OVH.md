@@ -5,7 +5,7 @@
 **Décideurs** : Équipe projet  
 **Tags** : `dns`, `ddns`, `ovh`, `domain`, `vpn`
 
-> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. L'IP `192.168.1.101` citée plus bas est **obsolète** (la vraie IP vérifiée pour VM-INTRANET est `192.168.1.201`). Pour l'état réel actuel de l'infrastructure, voir `README.md`.
+> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. L'IP `<IP_INTRANET_OBSOLETE>` citée plus bas est **obsolète** (la vraie IP vérifiée pour VM-INTRANET est `<IP_VM_INTRANET>`). Pour l'état réel actuel de l'infrastructure, voir `README.md`.
 
 ---
 
@@ -332,15 +332,15 @@ media           CNAME   vpn.elmzn.be.
 
 ```bash
 # /etc/pihole/custom.list (Pi-hole)
-192.168.1.100 vpn.elmzn.be
-192.168.1.101 media.elmzn.be
-192.168.1.101 photos.elmzn.be
-192.168.1.101 cloud.elmzn.be
+<IP_PVE_EXTRANET> vpn.elmzn.be
+<IP_INTRANET_OBSOLETE> media.elmzn.be
+<IP_INTRANET_OBSOLETE> photos.elmzn.be
+<IP_INTRANET_OBSOLETE> cloud.elmzn.be
 ```
 
 **Effet** :
-- **Depuis LAN** : vpn.elmzn.be → 192.168.1.100 (direct VM-EXTRANET)
-- **Depuis WAN** : vpn.elmzn.be → IP publique → NAT → 192.168.1.100
+- **Depuis LAN** : vpn.elmzn.be → `<IP_PVE_EXTRANET>` (direct VM-EXTRANET)
+- **Depuis WAN** : vpn.elmzn.be → IP publique → NAT → `<IP_PVE_EXTRANET>`
 
 **Avantage** : Pas de hairpin NAT (routeur pas de boucle externe → interne).
 
@@ -351,24 +351,24 @@ media           CNAME   vpn.elmzn.be.
 ### NAT / Port forwarding (routeur Proximus)
 
 ```yaml
-# Routeur (192.168.1.1) → Port forwarding
+# Routeur (<IP_BOX>) → Port forwarding
 
 OpenVPN:
   - Protocole: UDP
   - Port externe: 1194
-  - IP interne: 192.168.1.100 (VM-EXTRANET)
+  - IP interne: <IP_PVE_EXTRANET> (VM-EXTRANET)
   - Port interne: 1194
 
 HTTPS (NPM):
   - Protocole: TCP
   - Port externe: 443
-  - IP interne: 192.168.1.100 (VM-EXTRANET)
+  - IP interne: <IP_PVE_EXTRANET> (VM-EXTRANET)
   - Port interne: 443
 
 HTTP (redirect → HTTPS):
   - Protocole: TCP
   - Port externe: 80
-  - IP interne: 192.168.1.100 (VM-EXTRANET)
+  - IP interne: <IP_PVE_EXTRANET> (VM-EXTRANET)
   - Port interne: 80
 ```
 
@@ -380,13 +380,13 @@ HTTP (redirect → HTTPS):
 ### Firewall UFW (VM-EXTRANET)
 
 ```bash
-# VM-EXTRANET (192.168.1.100)
+# VM-EXTRANET (<IP_PVE_EXTRANET>)
 
 ufw default deny incoming
 ufw default allow outgoing
 
 # SSH depuis LAN uniquement
-ufw allow from 192.168.1.0/24 to any port 22
+ufw allow from <LAN>/24 to any port 22
 
 # OpenVPN depuis Internet
 ufw allow 1194/udp

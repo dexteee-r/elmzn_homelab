@@ -5,7 +5,7 @@
 **Décideurs** : Équipe projet  
 **Tags** : `os`, `debian`, `ubuntu`, `stability`
 
-> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. L'IP `192.168.1.101` citée plus bas pour VM-INTRANET est **obsolète** (la vraie IP vérifiée est `192.168.1.201`). Pour l'état réel actuel de l'infrastructure, voir `README.md`.
+> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. L'IP `<IP_INTRANET_OBSOLETE>` citée plus bas pour VM-INTRANET est **obsolète** (la vraie IP vérifiée est `<IP_VM_INTRANET>`). Pour l'état réel actuel de l'infrastructure, voir `README.md`.
 
 ---
 
@@ -32,8 +32,8 @@ Après avoir choisi Proxmox VE comme hyperviseur (ADR-001), nous devons sélecti
 **Choix : Debian 13 (Trixie)**
 
 Distribution installée sur les deux VMs :
-- **VM-EXTRANET** (192.168.1.100) : Debian 13 minimal
-- **VM-INTRANET** (192.168.1.101) : Debian 13 minimal
+- **VM-EXTRANET** (`<IP_PVE_EXTRANET>`) : Debian 13 minimal
+- **VM-INTRANET** (`<IP_INTRANET_OBSOLETE>`) : Debian 13 minimal
 
 ---
 
@@ -167,7 +167,7 @@ Distribution installée sur les deux VMs :
 
 ## 📦 Configuration retenue
 
-### VM-EXTRANET (192.168.1.100)
+### VM-EXTRANET (`<IP_PVE_EXTRANET>`)
 
 ```yaml
 OS: Debian 13 (Trixie)
@@ -183,7 +183,7 @@ Services:
   - ddclient (DDNS OVH)
 ```
 
-### VM-INTRANET (192.168.1.101)
+### VM-INTRANET (`<IP_INTRANET_OBSOLETE>`)
 
 ```yaml
 OS: Debian 13 (Trixie)
@@ -246,8 +246,8 @@ usermod -aG docker $USER
 cat > /etc/network/interfaces <<EOF
 auto ens18
 iface ens18 inet static
-  address 192.168.1.100/24  # ou .101 pour INTRANET
-  gateway 192.168.1.1
+  address <IP_PVE_EXTRANET>/24  # ou <IP_INTRANET_OBSOLETE> pour INTRANET
+  gateway <IP_BOX>
   dns-nameservers 1.1.1.1 8.8.8.8
 EOF
 ```

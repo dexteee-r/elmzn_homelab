@@ -1,6 +1,6 @@
 # ADR-008 — Architecture multi-VM : EXTRANET + INTRANET
 
-> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. L'IP `192.168.1.101` citée plus bas pour VM-INTRANET est **obsolète** (la vraie IP vérifiée est `192.168.1.201`). Pour l'état réel actuel de l'infrastructure, voir `README.md`.
+> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. L'IP `<IP_INTRANET_OBSOLETE>` citée plus bas pour VM-INTRANET est **obsolète** (la vraie IP vérifiée est `<IP_VM_INTRANET>`). Pour l'état réel actuel de l'infrastructure, voir `README.md`.
 
 ## 📘 Contexte
 
@@ -34,14 +34,14 @@ Initialement prévu : **1 VM Ubuntu 24.04 "Services"** monolithique.
 
 ```
 Proxmox VE 8.4 (1 interface physique)
-└─ vmbr0 (192.168.1.0/24) — Bridge unique
-   ├─ VM-EXTRANET (192.168.1.100)
+└─ vmbr0 (<LAN>/24) — Bridge unique
+   ├─ VM-EXTRANET (<IP_PVE_EXTRANET>)
    │  ├─ Debian 13
    │  ├─ 4 GB RAM, 2 vCPU
    │  ├─ Exposition Internet (80/443/1194)
    │  └─ Services : NPM, OpenVPN, Fail2ban
    │
-   └─ VM-INTRANET (192.168.1.101)
+   └─ VM-INTRANET (<IP_INTRANET_OBSOLETE>)
       ├─ Debian 13
       ├─ 12 GB RAM, 3 vCPU
       ├─ AUCUNE exposition directe Internet
@@ -53,7 +53,7 @@ Proxmox VE 8.4 (1 interface physique)
 
 ## 🎯 Répartition des rôles
 
-### **VM-EXTRANET (192.168.1.100) — "Porte d'entrée"**
+### **VM-EXTRANET (`<IP_PVE_EXTRANET>`) — "Porte d'entrée"**
 
 **Rôle :** Point d'entrée unique depuis Internet
 
@@ -82,14 +82,14 @@ Proxmox VE 8.4 (1 interface physique)
 **Exposition Internet :**
 ```
 Box Internet (port forwarding) :
-  80/tcp → 192.168.1.100:80
-  443/tcp → 192.168.1.100:443
-  1194/udp → 192.168.1.100:1194
+  80/tcp → <IP_PVE_EXTRANET>:80
+  443/tcp → <IP_PVE_EXTRANET>:443
+  1194/udp → <IP_PVE_EXTRANET>:1194
 ```
 
 ---
 
-### **VM-INTRANET (192.168.1.101) — "Services métier"**
+### **VM-INTRANET (`<IP_INTRANET_OBSOLETE>`) — "Services métier"**
 
 **Rôle :** Héberge applications sans exposition directe
 
@@ -108,19 +108,19 @@ AUCUN port exposé directement ✅
 Accès uniquement via :
   1. NPM (VM-EXTRANET) → reverse proxy
   2. OpenVPN → tunnel LAN
-  3. Réseau LAN local (192.168.1.x)
+  3. Réseau LAN local (<LAN>)
 ```
 
 **UFW (firewall) :**
 ```bash
 # Autoriser UNIQUEMENT VM-EXTRANET (NPM)
-ufw allow from 192.168.1.100 to any port 8096,2283,9090,3000
+ufw allow from <IP_PVE_EXTRANET> to any port 8096,2283,9090,3000
 
 # Autoriser accès LAN (famille)
-ufw allow from 192.168.1.0/24 to any port 8096,2283,3000
+ufw allow from <LAN>/24 to any port 8096,2283,3000
 
 # SSH depuis LAN uniquement
-ufw allow from 192.168.1.0/24 to any port 22
+ufw allow from <LAN>/24 to any port 22
 
 # BLOQUER accès direct Internet
 ufw default deny incoming
@@ -151,16 +151,16 @@ VM-INTRANET:8096 (Jellyfin)
 ### **Cas 2 : LAN → Jellyfin (optimisé)**
 
 ```
-TV/PC LAN (192.168.1.x)
+TV/PC LAN (<LAN>)
     ↓
-http://192.168.1.101:8096 (direct)
+http://<IP_INTRANET_OBSOLETE>:8096 (direct)
     OU
 https://jellyfin.elmzn.be (via NPM, si split DNS)
 ```
 
 **Optimisation recommandée : Split DNS**
 - Pi-hole / AdGuard Home
-- `jellyfin.elmzn.be` → 192.168.1.101 (LAN)
+- `jellyfin.elmzn.be` → `<IP_INTRANET_OBSOLETE>` (LAN)
 - Bypass NPM en interne = gain latence
 
 ---
@@ -174,13 +174,13 @@ OpenVPN client (.ovpn)
     ↓
 vpn.elmzn.be:1194 (VM-EXTRANET)
     ↓
-Tunnel 10.8.0.x créé
+Tunnel <RESEAU_VPN> créé
     ↓
 Accès direct à :
-  - 192.168.1.100:8006 (Proxmox web)
-  - 192.168.1.101:8096 (Jellyfin)
-  - 192.168.1.101:3000 (Grafana)
-  - Tout le LAN 192.168.1.0/24
+  - <IP_PVE_EXTRANET>:8006 (Proxmox web)
+  - <IP_INTRANET_OBSOLETE>:8096 (Jellyfin)
+  - <IP_INTRANET_OBSOLETE>:3000 (Grafana)
+  - Tout le LAN <LAN>/24
 ```
 
 ---
@@ -203,8 +203,8 @@ Accès direct à :
 - Logs centralisés
 
 ### **Couche 4 : VM-INTRANET (UFW strict)**
-- Allow UNIQUEMENT depuis 192.168.1.100
-- Allow LAN (192.168.1.0/24)
+- Allow UNIQUEMENT depuis `<IP_PVE_EXTRANET>`
+- Allow LAN (`<LAN>`/24)
 - Deny Internet direct
 - Isolation maximum
 
@@ -246,7 +246,7 @@ Accès direct à :
 RAM : 4 GB
 vCPU : 2 cores
 Disque : 20 GB (SSD)
-Réseau : vmbr0 (192.168.1.100)
+Réseau : vmbr0 (<IP_PVE_EXTRANET>)
 ```
 
 ### **VM-INTRANET (101)**
@@ -254,7 +254,7 @@ Réseau : vmbr0 (192.168.1.100)
 RAM : 12 GB
 vCPU : 3 cores
 Disque : 40 GB (SSD)
-Réseau : vmbr0 (192.168.1.101)
+Réseau : vmbr0 (<IP_INTRANET_OBSOLETE>)
 GPU : Intel HD 530 passthrough (transcodage Jellyfin)
 ```
 
@@ -271,7 +271,7 @@ curl -I https://google.com
 # ✅ Doit fonctionner (outgoing autorisé)
 
 # Depuis Internet, scanner VM-INTRANET
-nmap 192.168.1.101 -p 8096
+nmap <IP_INTRANET_OBSOLETE> -p 8096
 # ✅ Doit échouer (UFW bloque)
 ```
 
@@ -285,7 +285,7 @@ curl -I https://jellyfin.elmzn.be
 ### **Test 3 : VPN accès complet**
 ```bash
 # Connecté au VPN
-curl http://192.168.1.101:3000
+curl http://<IP_INTRANET_OBSOLETE>:3000
 # ✅ Doit afficher Grafana
 ```
 

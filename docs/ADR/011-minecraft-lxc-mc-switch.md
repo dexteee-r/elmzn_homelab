@@ -20,7 +20,7 @@ l'outil **`mc-switch`** pour gérer plusieurs profils via un symlink unique
 ## Architecture retenue
 
 ```
-LXC 200 (192.168.1.202)
+LXC 200 (<IP_LXC_MINECRAFT>)
 └─ /home/minecraft/
    ├─ active-server  →  servers/cobbleverse  (symlink)
    └─ servers/
@@ -47,7 +47,7 @@ minecraft.service  →  démarre active-server/start.sh
 | RAM | 12 GB |
 | Swap | 2 GB |
 | Disque | 30 GB |
-| IP | 192.168.1.202 |
+| IP | `<IP_LXC_MINECRAFT>` |
 
 ## Conséquences
 

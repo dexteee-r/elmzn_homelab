@@ -6,7 +6,7 @@
 **Décideurs** : Équipe projet  
 **Tags** : `reverse-proxy`, `npm`, `traefik`, `nginx`, `ssl`
 
-> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. L'IP `192.168.1.101` citée plus bas pour VM-INTRANET est **obsolète** (la vraie IP vérifiée est `192.168.1.201`). Pour l'état réel actuel de l'infrastructure, voir `README.md`.
+> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. L'IP `<IP_INTRANET_OBSOLETE>` citée plus bas pour VM-INTRANET est **obsolète** (la vraie IP vérifiée est `<IP_VM_INTRANET>`). Pour l'état réel actuel de l'infrastructure, voir `README.md`.
 
 ---
 
@@ -166,10 +166,10 @@ Après tests pratiques, NPM s'est avéré **plus simple et plus stable** pour un
        - ./letsencrypt:/etc/letsencrypt
    ```
    
-   **Interface web (http://192.168.1.100:81)** :
+   **Interface web (http://`<IP_PVE_EXTRANET>`:81)** :
    1. Proxy Hosts → Add Proxy Host
    2. Domain : `media.elmzn.be`
-   3. Forward Hostname : `192.168.1.101` (VM-INTRANET)
+   3. Forward Hostname : `<IP_INTRANET_OBSOLETE>` (VM-INTRANET)
    4. Forward Port : `8096` (Jellyfin)
    5. SSL → Request SSL Certificate (Let's Encrypt)
    6. ✅ Certificat généré en 30s, routing OK
@@ -181,8 +181,8 @@ Après tests pratiques, NPM s'est avéré **plus simple et plus stable** pour un
 ### Avantages spécifiques NPM pour ce projet
 
 1. **Multi-VM natif** :
-   - NPM sur VM-EXTRANET (192.168.1.100)
-   - Forward vers VM-INTRANET (192.168.1.101)
+   - NPM sur VM-EXTRANET (`<IP_PVE_EXTRANET>`)
+   - Forward vers VM-INTRANET (`<IP_INTRANET_OBSOLETE>`)
    - Pas besoin auto-discovery (services connus à l'avance)
 
 2. **Gestion centralisée** :
@@ -212,7 +212,7 @@ Après tests pratiques, NPM s'est avéré **plus simple et plus stable** pour un
 ### Déploiement NPM (VM-EXTRANET)
 
 ```yaml
-# /opt/npm/docker-compose.yml (VM-EXTRANET 192.168.1.100)
+# /opt/npm/docker-compose.yml (VM-EXTRANET <IP_PVE_EXTRANET>)
 
 services:
   npm:
@@ -248,7 +248,7 @@ docker compose up -d
 ```
 
 **Accès admin** :
-- URL : http://192.168.1.100:81
+- URL : http://`<IP_PVE_EXTRANET>`:81
 - Email : admin@example.com
 - Password : changeme (à changer 1er login)
 
@@ -258,7 +258,7 @@ docker compose up -d
 ```yaml
 Domain Names: media.elmzn.be
 Scheme: http
-Forward Hostname/IP: 192.168.1.101 (VM-INTRANET)
+Forward Hostname/IP: <IP_INTRANET_OBSOLETE> (VM-INTRANET)
 Forward Port: 8096
 Block Common Exploits: ✅
 Websockets Support: ✅
@@ -273,7 +273,7 @@ SSL:
 ```yaml
 Domain Names: photos.elmzn.be
 Scheme: http
-Forward Hostname/IP: 192.168.1.101
+Forward Hostname/IP: <IP_INTRANET_OBSOLETE>
 Forward Port: 2283
 Block Common Exploits: ✅
 Websockets Support: ✅
@@ -288,11 +288,11 @@ SSL:
 ```yaml
 Domain Names: grafana.elmzn.be
 Scheme: http
-Forward Hostname/IP: 192.168.1.101
+Forward Hostname/IP: <IP_INTRANET_OBSOLETE>
 Forward Port: 3000
 Block Common Exploits: ✅
 Websockets Support: ✅
-Access List: LAN + VPN only (192.168.1.0/24, 10.8.0.0/24)
+Access List: LAN + VPN only (<LAN>/24, <RESEAU_VPN>/24)
 SSL:
   - Force SSL: ✅
   - HTTP/2 Support: ✅
@@ -351,8 +351,8 @@ Pass Auth: No (pas d'auth supplémentaire si IP autorisée)
 Satisfy Any: Yes (IP OU user/pass)
 
 Access:
-  Allow 192.168.1.0/24   # LAN local
-  Allow 10.8.0.0/24       # OpenVPN clients
+  Allow <LAN>/24   # LAN local
+  Allow <RESEAU_VPN>/24       # OpenVPN clients
   Deny all               # Bloquer reste du monde
 ```
 

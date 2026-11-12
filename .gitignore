@@ -30,3 +30,6 @@ Thumbs.db
 # Backups
 *.bak
 *.backup
+
+# Source PDF contenant des IP en clair (garde en local, hors depot)
+docs/web-server-doc-v2.pdf

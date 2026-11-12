@@ -154,10 +154,10 @@ networks:
 #   docker-compose up -d
 
 # Accès Web UI :
-#   - Nginx Proxy Manager : http://192.168.1.111:81
+#   - Nginx Proxy Manager : http://<IP_VM_EXTRANET>:81
 #     Default credentials : admin@example.com / changeme
-#   - Uptime Kuma : http://192.168.1.111:3001
-#   - Node Exporter : http://192.168.1.111:9100/metrics
+#   - Uptime Kuma : http://<IP_VM_EXTRANET>:3001
+#   - Node Exporter : http://<IP_VM_EXTRANET>:9100/metrics
 
 # Services NON-Docker (systemd) :
 #   - OpenVPN Access Server : systemctl status openvpn@server

@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| 🎯 Résultat | Depuis n'importe où, tu atteins `192.168.1.0/24` (Immich, NPM, Stremio…) via le VPN |
+| 🎯 Résultat | Depuis n'importe où, tu atteins `<LAN>/24` (Immich, NPM, Stremio…) via le VPN |
 | ⏱️ Durée | ~45 min |
 | 📊 Niveau | Intermédiaire |
 | 🧩 Pré-requis | Un hôte **Proxmox allumé 24/7** · un **nom DDNS** qui suit ton IP publique · accès admin à ta **box** |
@@ -15,11 +15,11 @@
 Un **LXC dédié** sur le Beelink (allumé 24/7) fait tourner **wg-easy** (WireGuard + interface web). Il s'annonce comme **routeur de sous-réseau** : les clients VPN atteignent tout le LAN sans toucher à la config des autres machines.
 
 ```
-Internet ──UDP 51820──▶ Box FAI ──port-forward──▶ Beelink 24/7 (pve-extranet, .100)
+Internet ──UDP 51820──▶ Box FAI ──port-forward──▶ Beelink 24/7 (pve-extranet)
                                                      │
                                           LXC 103 « wireguard » (Docker)
                                           • wg-easy (GUI + QR codes)
-                                          • route 192.168.1.0/24
+                                          • route <LAN>/24
                                                      │
    Clients (Android TV / téléphone / PC) ──VPN──▶ tout le LAN
                                                → Immich, NPM, Stremio…
@@ -40,7 +40,7 @@ traceroute -n 8.8.8.8    # regarde le saut n°2
 
 🔎 **Résultat attendu** (lecture du traceroute)
 ```
-1  192.168.1.1        ← ta box (passerelle LAN)
+1  <IP_BOX>        ← ta box (passerelle LAN)
 2  10.x.x.x           ← réseau interne opérateur (OK)
 ...
 4  <backbone public>  ← IP publique de l'opérateur
@@ -58,7 +58,7 @@ traceroute -n 8.8.8.8    # regarde le saut n°2
 
 *Pourquoi :* un conteneur isolé pour WireGuard (séparation des responsabilités), non-privilégié pour la sécurité, avec accès au device `/dev/net/tun`.
 
-Sur l'hôte Proxmox (`pve-extranet`, `192.168.1.100`) :
+Sur l'hôte Proxmox (`pve-extranet`, `<IP_PVE_EXTRANET>`) :
 
 ```bash
 # 1. Charger le module noyau WireGuard (+ persistant après reboot)
@@ -69,7 +69,7 @@ echo "wireguard" > /etc/modules-load.d/wireguard.conf
 pct create 103 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
   --hostname wireguard --cores 1 --memory 512 --swap 512 \
   --rootfs local-lvm:4 \
-  --net0 name=eth0,bridge=vmbr0,ip=192.168.1.113/24,gw=192.168.1.1 \
+  --net0 name=eth0,bridge=vmbr0,ip=<IP_LXC_WIREGUARD>/24,gw=<IP_BOX> \
   --nameserver 1.1.1.1 \
   --features nesting=1,keyctl=1 --unprivileged 1 --onboot 1 --start 0
 
@@ -138,7 +138,7 @@ wg-easy   ghcr.io/wg-easy/wg-easy:15   Up (healthy)              0.0.0.0:51820->
 
 Depuis un PC du LAN, ouvre :
 ```
-http://192.168.1.113:51821
+http://<IP_LXC_WIREGUARD>:51821
 ```
 
 Suis l'assistant :
@@ -154,23 +154,23 @@ Suis l'assistant :
 
 ## 🚶 Étape 4 — Créer un client + activer le subnet-routing
 
-*Pourquoi :* le réglage **Allowed IPs** du client décide quel trafic passe dans le tunnel. Pour atteindre le LAN, il doit inclure `192.168.1.0/24`.
+*Pourquoi :* le réglage **Allowed IPs** du client décide quel trafic passe dans le tunnel. Pour atteindre le LAN, il doit inclure `<LAN>/24`.
 
 Dans le panneau admin :
 1. **Add a new client** → nomme-le (ex. `phone`).
 2. Ouvre ses réglages → champ **Allowed IPs** → mets :
    ```
-   192.168.1.0/24
+   <LAN>/24
    ```
 
 **Split tunnel vs full tunnel :**
 
 | Allowed IPs | Effet |
 |-------------|-------|
-| `192.168.1.0/24` *(recommandé)* | **Split tunnel** : seul le trafic homelab passe par le VPN, le reste d'Internet garde sa route normale. Léger. |
+| `<LAN>/24` *(recommandé)* | **Split tunnel** : seul le trafic homelab passe par le VPN, le reste d'Internet garde sa route normale. Léger. |
 | `0.0.0.0/0, ::/0` | **Full tunnel** : *tout* le trafic du client sort par la maison (utile pour masquer ton IP partout). |
 
-✅ **Vérifie que :** dans la config du client (QR / fichier), la ligne `Endpoint = home.elmzn.be:51820` et `AllowedIPs` contient `192.168.1.0/24`.
+✅ **Vérifie que :** dans la config du client (QR / fichier), la ligne `Endpoint = home.elmzn.be:51820` et `AllowedIPs` contient `<LAN>/24`.
 
 ---
 
@@ -178,13 +178,13 @@ Dans le panneau admin :
 
 *Pourquoi :* sans port-forward, le trafic VPN entrant n'atteint jamais le LXC.
 
-Dans l'admin de ta box (`http://192.168.1.1`, section *Redirection de ports / NAT*), ajoute :
+Dans l'admin de ta box (`http://<IP_BOX>`, section *Redirection de ports / NAT*), ajoute :
 
 | Champ | Valeur |
 |-------|--------|
 | Protocole | **UDP** |
 | Port externe (WAN) | **51820** |
-| IP interne | **192.168.1.113** |
+| IP interne | **`<IP_LXC_WIREGUARD>`** |
 | Port interne | **51820** |
 
 ✅ **Vérifie que :** la règle est enregistrée et active.
@@ -199,7 +199,7 @@ Dans l'admin de ta box (`http://192.168.1.1`, section *Redirection de ports / NA
 4. **Coupe le WiFi, active la 4G/5G**, puis **active le tunnel**.
 5. Deux niveaux de preuve :
    - App WireGuard → **Latest handshake** affiche un horodatage récent + des octets échangés → le **tunnel est monté** (port-forward + DDNS OK).
-   - Ouvre `http://192.168.1.113:51821` (l'admin wg-easy) **puis** une autre machine du LAN, ex. `http://192.168.1.111:81` (NPM). Si les deux chargent en 4G → **subnet-routing complet validé** : tu atteins n'importe quelle IP du `192.168.1.0/24`.
+   - Ouvre `http://<IP_LXC_WIREGUARD>:51821` (l'admin wg-easy) **puis** une autre machine du LAN, ex. `http://<IP_VM_EXTRANET>:81` (NPM). Si les deux chargent en 4G → **subnet-routing complet validé** : tu atteins n'importe quelle IP du `<LAN>/24`.
 
 > Teste une machine **allumée 24/7** : une cible éteinte donnerait un faux négatif (injoignable parce qu'éteinte, pas à cause du VPN).
 
@@ -213,15 +213,15 @@ Dans l'admin de ta box (`http://192.168.1.1`, section *Redirection de ports / NA
 | `yaml: ... did not find expected key` au `docker compose up` | Le terminal a mangé l'indentation au **collage** du YAML | Ne colle jamais de YAML multi-lignes : `curl` le compose, `printf` les overrides (comme dans ce tuto) |
 | `docker compose up` plante sur `ip6tables` / IPv6 | IPv6 Docker pas dispo dans le LXC | Retire le réseau IPv6 du compose (variante IPv4-only) |
 | Aucun handshake depuis la 4G | Port-forward box absent/erroné, **ou** opérateur qui filtre 51820, **ou** CGNAT | Revérifie l'Étape 5 ; teste un autre port UDP ; refais l'Étape 0 |
-| `.113` joignable mais pas les autres machines | Cible éteinte, **ou** `AllowedIPs` n'inclut pas `192.168.1.0/24` | Teste une machine 24/7 ; corrige les Allowed IPs (Étape 4) |
+| `<IP_LXC_WIREGUARD>` joignable mais pas les autres machines | Cible éteinte, **ou** `AllowedIPs` n'inclut pas `<LAN>/24` | Teste une machine 24/7 ; corrige les Allowed IPs (Étape 4) |
 
-> ℹ️ **Routage automatique :** aucune règle `iptables`/MASQUERADE manuelle n'est nécessaire. wg-easy masque le client derrière le conteneur, et le bridge Docker masque le conteneur derrière l'IP du LXC (`192.168.1.113`) en sortie vers le LAN. Double-NAT transparent.
+> ℹ️ **Routage automatique :** aucune règle `iptables`/MASQUERADE manuelle n'est nécessaire. wg-easy masque le client derrière le conteneur, et le bridge Docker masque le conteneur derrière l'IP du LXC (`<IP_LXC_WIREGUARD>`) en sortie vers le LAN. Double-NAT transparent.
 
 ---
 
 ## ➡️ Et après
 
-- **Ajouter tes autres appareils** (Android TV, PC) : même méthode QR, mêmes Allowed IPs `192.168.1.0/24`.
+- **Ajouter tes autres appareils** (Android TV, PC) : même méthode QR, mêmes Allowed IPs `<LAN>/24`.
 - **Sécuriser l'interface wg-easy** : la passer derrière NPM en HTTPS (elle n'est de toute façon joignable que via LAN/VPN).
 - **Fiabiliser le DDNS** : s'assurer qu'un client met activement à jour `home.elmzn.be` — sinon, un changement d'IP coupe l'accès. Voir [ADR-010](../ADR/010-DNS%20public%20avec%20DDNS%20dynamique%20elmzn.be%20+%20OVH.md).
-- **Tuto Stremio** *(à venir)* : une fois déployé, il sera accessible via ce VPN sans config supplémentaire (juste une IP de plus dans le `192.168.1.0/24`).
+- **Tuto Stremio** *(à venir)* : une fois déployé, il sera accessible via ce VPN sans config supplémentaire (juste une IP de plus dans le `<LAN>/24`).

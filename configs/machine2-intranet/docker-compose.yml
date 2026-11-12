@@ -1,6 +1,6 @@
 # ⚠️ ARCHIVE OBSOLÈTE — PRÉ-MIGRATION, NE PAS SUIVRE TEL QUEL
-# L'IP de vm-intranet indiquée ici (192.168.1.101) est FAUSSE : l'IP réelle
-# vérifiée est 192.168.1.201. Ce fichier date d'avant la mise en service réelle.
+# L'IP de vm-intranet indiquée ici (<IP_INTRANET_OBSOLETE>) est FAUSSE : l'IP réelle
+# vérifiée est <IP_VM_INTRANET>. Ce fichier date d'avant la mise en service réelle.
 # Pour l'état réel et les services actuels de Machine #2 INTRANET, voir :
 #   - README.md (tables "Services Déployés")
 #   - docs/tutos/installer-proxmox.md
@@ -159,10 +159,10 @@ volumes:
 #   docker exec -i postgres psql -U postgres < backup.sql
 
 # Accès Web UI :
-#   - Immich : http://192.168.1.101:2283
-#   - Nextcloud : http://192.168.1.101:8080
-#   - Grafana : http://192.168.1.101:3000
-#   - Prometheus : http://192.168.1.101:9090
+#   - Immich : http://<IP_INTRANET_OBSOLETE>:2283
+#   - Nextcloud : http://<IP_INTRANET_OBSOLETE>:8080
+#   - Grafana : http://<IP_INTRANET_OBSOLETE>:3000
+#   - Prometheus : http://<IP_INTRANET_OBSOLETE>:9090
 
 # Accès externe (via reverse proxy Machine #1) :
 #   - https://photos.elmzn.be → Immich

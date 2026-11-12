@@ -5,7 +5,7 @@
 **Décideurs :** Markus  
 **Tags :** `architecture`, `infrastructure`, `sécurité`
 
-> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. Depuis, Machine #1 est passée du Dell OptiPlex 7040 à un Beelink S12 (migration du 2026-03-21, voir `docs/MIGRATION-M1-vers-nouvelle-machine.md`) — l'ancien OptiPlex a été reconverti en Machine #3 (NAS ZimaOS). L'IP `192.168.1.101` citée plus bas pour VM-INTRANET est aussi **obsolète** (la vraie IP vérifiée est `192.168.1.201`), et l'infrastructure compte aujourd'hui 3 machines, pas 2. Pour l'état réel actuel, voir `README.md`.
+> ⚠️ **Note (2026-09-22) :** cette ADR documente une décision figée au moment de sa rédaction. Depuis, Machine #1 est passée du Dell OptiPlex 7040 à un Beelink S12 (migration du 2026-03-21, voir `docs/MIGRATION-M1-vers-nouvelle-machine.md`) — l'ancien OptiPlex a été reconverti en Machine #3 (NAS ZimaOS). L'IP `<IP_INTRANET_OBSOLETE>` citée plus bas pour VM-INTRANET est aussi **obsolète** (la vraie IP vérifiée est `<IP_VM_INTRANET>`), et l'infrastructure compte aujourd'hui 3 machines, pas 2. Pour l'état réel actuel, voir `README.md`.
 
 ---
 
@@ -29,13 +29,13 @@ L'infrastructure initiale utilisait **1 seule machine** (Dell OptiPlex 7040) hé
 - **Rôle :** Exposition Internet UNIQUEMENT
 - **Hardware :** Dell OptiPlex 7040 (i5-6500, 16 GB RAM)
 - **Services :** Reverse proxy, VPN, DNS dynamique, firewall
-- **IP :** 192.168.1.111
+- **IP :** `<IP_VM_EXTRANET>`
 
 ### **Machine #2 : INTRANET (LAN Privé)**
 - **Rôle :** Stockage famille + Services applicatifs + VMs laboratoire
 - **Hardware :** Custom PC (i7-6700, 16 GB RAM, GTX 980, 4 TB HDD)
 - **Services :** Immich, Nextcloud, PostgreSQL, VMs dev
-- **IP :** 192.168.1.101
+- **IP :** `<IP_INTRANET_OBSOLETE>`
 
 **Principe clé :** Machine #2 **JAMAIS** exposée directement à Internet.
 
@@ -165,13 +165,13 @@ Rejetée car :
 #### Migration Réseau
 ```bash
 # Avant (1 machine)
-192.168.1.100 : Proxmox host unique
-├─ 192.168.1.111 : VM-EXTRANET
-└─ 192.168.1.101 : VM-INTRANET
+<IP_PVE_EXTRANET> : Proxmox host unique
+├─ <IP_VM_EXTRANET> : VM-EXTRANET
+└─ <IP_INTRANET_OBSOLETE> : VM-INTRANET
 
 # Après (2 machines)
-192.168.1.111 : Machine #1 EXTRANET (host physique)
-192.168.1.101 : Machine #2 INTRANET (host physique)
+<IP_VM_EXTRANET> : Machine #1 EXTRANET (host physique)
+<IP_INTRANET_OBSOLETE> : Machine #2 INTRANET (host physique)
 ```
 
 #### Configuration Firewall
@@ -180,19 +180,19 @@ Rejetée car :
 ufw allow 80/tcp      # HTTP
 ufw allow 443/tcp     # HTTPS
 ufw allow 1194/udp    # OpenVPN
-ufw allow from 192.168.1.101  # Allow Machine #2
+ufw allow from <IP_INTRANET_OBSOLETE>  # Allow Machine #2
 
 # Machine #2 UFW
 ufw default deny incoming
-ufw allow from 192.168.1.111  # Allow Machine #1 (reverse proxy)
-ufw allow from 192.168.1.0/24 # Allow LAN direct
+ufw allow from <IP_VM_EXTRANET>  # Allow Machine #1 (reverse proxy)
+ufw allow from <LAN>/24 # Allow LAN direct
 ```
 
 #### Reverse Proxy (Nginx NPM)
 ```nginx
 # Machine #1 → Machine #2
-photos.elmzn.be → 192.168.1.101:2283 (Immich)
-files.elmzn.be  → 192.168.1.101:8080 (Nextcloud)
+photos.elmzn.be → <IP_INTRANET_OBSOLETE>:2283 (Immich)
+files.elmzn.be  → <IP_INTRANET_OBSOLETE>:8080 (Nextcloud)
 ```
 
 ### 📊 **Métriques de Succès**

@@ -112,30 +112,30 @@ Choisir une stack de monitoring **légère, standard et extensible**, capable de
 scrape_configs:
   - job_name: 'node_intranet'
     static_configs:
-      - targets: ['192.168.1.10:9100']
+      - targets: ['<IP_PROMETHEUS>:9100']
 
   - job_name: 'node_extranet'
     static_configs:
-      - targets: ['10.10.0.10:9100']
+      - targets: ['<IP_EXTRANET_VPN>:9100']
 
   - job_name: 'docker'
     static_configs:
-      - targets: ['192.168.1.10:8080']
+      - targets: ['<IP_PROMETHEUS>:8080']
 
   - job_name: 'restic'
     static_configs:
-      - targets: ['192.168.1.10:9888']
+      - targets: ['<IP_PROMETHEUS>:9888']
 
   - job_name: 'openvpn'
     static_configs:
-      - targets: ['10.10.0.10:9176']
+      - targets: ['<IP_EXTRANET_VPN>:9176']
 
   - job_name: 'npm'
     static_configs:
-      - targets: ['10.10.0.10:9278'] # Si npm-exporter est activé
+      - targets: ['<IP_EXTRANET_VPN>:9278'] # Si npm-exporter est activé
 ````
 
-> 💡 Les exporters sensibles (OpenVPN, NPM) sont restreints via pare-feu à `192.168.1.10` (Prometheus).
+> 💡 Les exporters sensibles (OpenVPN, NPM) sont restreints via pare-feu à `<IP_PROMETHEUS>` (Prometheus).
 
 ---
 

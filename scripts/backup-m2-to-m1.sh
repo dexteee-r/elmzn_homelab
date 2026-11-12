@@ -27,7 +27,7 @@ CONFIGS_PATH="/opt/intranet"
 POSTGRES_BACKUP="/tmp/postgres-backup.sql"
 
 # Restic configuration
-export RESTIC_REPOSITORY="${RESTIC_REPOSITORY:-sftp:root@192.168.1.111:/mnt/backups-m2}"
+export RESTIC_REPOSITORY="${RESTIC_REPOSITORY:-sftp:root@<IP_VM_EXTRANET>:/mnt/backups-m2}"
 export RESTIC_PASSWORD="${RESTIC_PASSWORD}"
 
 # Logging

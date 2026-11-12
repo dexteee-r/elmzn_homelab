@@ -10,7 +10,7 @@
 | 🧩 Pré-requis | Un hôte Proxmox ([tuto](installer-proxmox.md)) · un nom de domaine (zone DNS OVH) · ports 80/443 forwardés depuis la box |
 | 🔗 Décisions liées | [ADR-002 — Docker vs LXC](../ADR/002-docker-vs-lxc.md) · [ADR-003 — Traefik vs Nginx](../ADR/003-traefik-vs-nginx.md) · [ADR-008 — Architecture EXTRANET/INTRANET](../ADR/008-architecture%20multi-VM%20%20EXTRANET%20+%20INTRANET.md) · [ADR-010 — DNS + DDNS OVH](../ADR/010-DNS%20public%20avec%20DDNS%20dynamique%20elmzn.be%20+%20OVH.md) |
 
-> ℹ️ **Redaction :** l'IP publique est notée `<IP_PUBLIQUE>` dans tout ce tuto — ne jamais l'écrire en clair dans le repo. Les IP `192.168.1.x` sont privées (LAN), donc montrées telles quelles.
+> ℹ️ **Redaction :** l'IP publique est notée `<IP_PUBLIQUE>` dans tout ce tuto — ne jamais l'écrire en clair dans le repo. Les IP privées du LAN sont redactées de la même façon (`<IP_LXC_WEB>`, `<IP_VM_EXTRANET>`, `<LAN>/24`…) : remplace-les par les tiennes.
 
 ## 🗺️ Ce qu'on construit
 
@@ -18,12 +18,12 @@
 Internet
    │  (DNS OVH : elmzn.be → <IP_PUBLIQUE>, maintenu par DDNS)
    ▼
-Box FAI  ──port-forward 80/443──►  VM-EXTRANET 192.168.1.111
+Box FAI  ──port-forward 80/443──►  VM-EXTRANET <IP_VM_EXTRANET>
                                     └─ Nginx Proxy Manager (NPM)
                                        • reçoit elmzn.be + sous-domaines
                                        • SSL Let's Encrypt (HTTPS)
                                        ▼  (http vers le LAN)
-                                   LXC-WEB 192.168.1.112 (ID 102)
+                                   LXC-WEB <IP_LXC_WEB> (ID 102)
                                     └─ Nginx (virtual hosts)
                                        • sites statiques  → fichiers
                                        • Next.js SSR      → reverse proxy → PM2 :3001
@@ -31,9 +31,9 @@ Box FAI  ──port-forward 80/443──►  VM-EXTRANET 192.168.1.111
 
 | Composant | Rôle | IP / Port |
 |-----------|------|-----------|
-| Hôte Proxmox `pve-extranet` | Hyperviseur (DMZ) | `192.168.1.100:8006` |
-| VM-EXTRANET | Nginx Proxy Manager (NPM) | `192.168.1.111` |
-| LXC-WEB (ID 102) | Nginx + sites | `192.168.1.112:80` |
+| Hôte Proxmox `pve-extranet` | Hyperviseur (DMZ) | `<IP_PVE_EXTRANET>:8006` |
+| VM-EXTRANET | Nginx Proxy Manager (NPM) | `<IP_VM_EXTRANET>` |
+| LXC-WEB (ID 102) | Nginx + sites | `<IP_LXC_WEB>:80` |
 | NPM | Reverse proxy + SSL Let's Encrypt | `:80` / `:443` / `:81` (dashboard) |
 | OVH DNS | Résolution `elmzn.be` → `<IP_PUBLIQUE>` | — |
 
@@ -58,7 +58,7 @@ pct create 102 local:vztmpl/ubuntu-24.04-standard_24.04-2_amd64.tar.zst \
   --memory 1536 \
   --swap 512 \
   --rootfs local-lvm:8 \
-  --net0 name=eth0,bridge=vmbr0,ip=192.168.1.112/24,gw=192.168.1.1 \
+  --net0 name=eth0,bridge=vmbr0,ip=<IP_LXC_WEB>/24,gw=<IP_BOX> \
   --nameserver 1.1.1.1 \
   --unprivileged 1 \
   --features nesting=1 \
@@ -130,13 +130,13 @@ Depuis **ta machine de dev** (pas depuis le LXC) :
 
 ```bash
 # Copier le contenu du site vers le LXC
-rsync -avz ./mon-site/ root@192.168.1.112:/var/www/elmzn.be/
+rsync -avz ./mon-site/ root@<IP_LXC_WEB>:/var/www/elmzn.be/
 
 # Corriger les permissions côté serveur
-ssh root@192.168.1.112 'chown -R www-data:www-data /var/www/elmzn.be'
+ssh root@<IP_LXC_WEB> 'chown -R www-data:www-data /var/www/elmzn.be'
 ```
 
-✅ **Vérifie que :** `http://192.168.1.112` (depuis le LAN) affiche le site. La directive `try_files $uri $uri/ =404;` gère seule tous les fichiers (`/css/style.css`, etc.).
+✅ **Vérifie que :** `http://<IP_LXC_WEB>` (depuis le LAN) affiche le site. La directive `try_files $uri $uri/ =404;` gère seule tous les fichiers (`/css/style.css`, etc.).
 
 ### Étape 4 — Déployer un site React (build statique)
 *Pourquoi :* un build React (`npm run build`) produit des fichiers statiques ; il faut juste rediriger toutes les routes vers `index.html` pour le routing côté client.
@@ -146,8 +146,8 @@ ssh root@192.168.1.112 'chown -R www-data:www-data /var/www/elmzn.be'
 npm install && npm run build         # sortie dans ./build (CRA) ou ./dist (Vite)
 
 # Uploader le build
-rsync -avz ./build/ root@192.168.1.112:/var/www/app.elmzn.be/
-ssh root@192.168.1.112 'chown -R www-data:www-data /var/www/app.elmzn.be'
+rsync -avz ./build/ root@<IP_LXC_WEB>:/var/www/app.elmzn.be/
+ssh root@<IP_LXC_WEB> 'chown -R www-data:www-data /var/www/app.elmzn.be'
 ```
 
 La **seule** différence Nginx vs site statique = le `try_files` qui retombe sur `/index.html` :
@@ -180,7 +180,7 @@ module.exports = nextConfig
 ```bash
 # Depuis la machine de dev — JAMAIS scp brut sur node_modules
 rsync -avz --exclude='node_modules' --exclude='.next' \
-  ./mon-app/ root@192.168.1.112:/var/www/portfolio.elmzn.be/
+  ./mon-app/ root@<IP_LXC_WEB>:/var/www/portfolio.elmzn.be/
 
 # Dans le LXC
 cd /var/www/portfolio.elmzn.be && npm install && npm run build
@@ -235,9 +235,9 @@ nginx -t && systemctl reload nginx
 > | Next.js SSR | Oui (PM2) | `proxy_pass localhost:3001` | Intermédiaire |
 
 ### Étape 6 — Exposer sur Internet via Nginx Proxy Manager
-*Pourquoi :* NPM (sur la VM-EXTRANET `.111`) reçoit le trafic Internet, gère le **HTTPS Let's Encrypt** et redirige vers le LXC — le LXC n'est jamais exposé en direct.
+*Pourquoi :* NPM (sur la VM-EXTRANET) reçoit le trafic Internet, gère le **HTTPS Let's Encrypt** et redirige vers le LXC — le LXC n'est jamais exposé en direct.
 
-> NPM tourne déjà en Docker sur la VM-EXTRANET (voir l'archi). Dashboard : `http://192.168.1.111:81`.
+> NPM tourne déjà en Docker sur la VM-EXTRANET (voir l'archi). Dashboard : `http://<IP_VM_EXTRANET>:81`.
 
 Dans le dashboard NPM → **Proxy Hosts → Add Proxy Host** :
 
@@ -245,7 +245,7 @@ Dans le dashboard NPM → **Proxy Hosts → Add Proxy Host** :
 Onglet Details :
   Domain Names      : elmzn.be, www.elmzn.be
   Scheme            : http
-  Forward Hostname  : 192.168.1.112        (le LXC)
+  Forward Hostname  : <IP_LXC_WEB>        (le LXC)
   Forward Port      : 80
   ☑ Block Common Exploits   ☑ Websockets Support
 
@@ -307,7 +307,7 @@ docker logs npm --tail 50
 
 # --- Diagnostic réseau ---
 dig elmzn.be +short           # résolution DNS
-curl -H "Host: elmzn.be" http://192.168.1.112    # tester Nginx via Host header
+curl -H "Host: elmzn.be" http://<IP_LXC_WEB>    # tester Nginx via Host header
 ```
 
 ## ✅ Test final
@@ -330,7 +330,7 @@ Si ça charge en 4G avec un certificat valide → DNS + port-forward + NPM + Ngi
 | Let's Encrypt échoue (timeout) | DNS pas propagé / ports 80-443 non forwardés | `dig elmzn.be +short` ; vérifier le port-forward de la box ; tester en 4G |
 | Next.js inaccessible après reboot | PM2 pas persisté | `pm2 startup && pm2 save` puis `pm2 restart portfolio` |
 | `502 Bad Gateway` sur le sous-domaine Next.js | le process Node est tombé | `pm2 list` → `pm2 restart portfolio` (vérifier d'abord la RAM du LXC) |
-| **Depuis le LAN**, le domaine ne passe pas par NPM (HTTP sans SSL) | **Hairpin NAT** | Ajouter `192.168.1.111 portfolio.elmzn.be` dans `C:\Windows\System32\drivers\etc\hosts` (Bloc-notes en admin) pour forcer le passage par NPM |
+| **Depuis le LAN**, le domaine ne passe pas par NPM (HTTP sans SSL) | **Hairpin NAT** | Ajouter `<IP_VM_EXTRANET> portfolio.elmzn.be` dans `C:\Windows\System32\drivers\etc\hosts` (Bloc-notes en admin) pour forcer le passage par NPM |
 
 ## ➡️ Et après
 

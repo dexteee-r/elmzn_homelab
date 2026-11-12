@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.11.1] - 2026-11-12
+
+### Retrait des adresses IP du reseau local
+
+#### Changed
+- Les adresses IP privees du reseau local (et le nom du sous-reseau) ne sont plus publiees : remplacees par des placeholders par role (`<IP_VM_EXTRANET>`, `<IP_SRV2>`, `<LAN>/24`...) dans le README, le CHANGELOG, les tutos, les ADR, le journal, les archives et les configs d'exemple.
+- Convention des tutos mise a jour (`docs/tutos/_TEMPLATE.md`) : IP publique **et** IP privees redactees.
+
+#### Removed
+- `docs/web-server-doc-v2.pdf` retire du depot (il contenait l'IP publique et des IP privees en clair). Le tuto `docs/tutos/serveur-web.md`, redige a partir de lui, reste la reference.
+
+#### Notes
+- Les anciens commits contiennent toujours ces adresses : l'historique n'a pas ete reecrit.
+- `scripts/backup-m2-to-m1.sh` et les fichiers de `configs/` sont des archives ou des exemples : remplacer les placeholders par les vraies valeurs avant tout usage.
+
 ## [3.11.0] - 2026-11-06
 
 ### Mise a jour de securite de tout le parc (APT CVE-2026-109518)
@@ -45,15 +60,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deploiement de Project NOMAD (srv2)
 
 #### Added
-- LXC 202 `nomad` sur srv2 (192.168.1.204, Debian 12, 2 coeurs, 3 Go de RAM, 16 Go, non privilegie, `nesting=1,keyctl=1`, demarrage auto) : Project NOMAD installe avec l'installeur officiel (Docker, 6 conteneurs : admin, MySQL, Redis, Dozzle, updater, disk-collector). Command Center sur `:8080`, logs Dozzle sur `:9999`, LAN uniquement.
+- LXC 202 `nomad` sur srv2 (`<IP_LXC_NOMAD>`, Debian 12, 2 coeurs, 3 Go de RAM, 16 Go, non privilegie, `nesting=1,keyctl=1`, demarrage auto) : Project NOMAD installe avec l'installeur officiel (Docker, 6 conteneurs : admin, MySQL, Redis, Dozzle, updater, disk-collector). Command Center sur `:8080`, logs Dozzle sur `:9999`, LAN uniquement.
 - Dataset ZFS `data-pool/nomad` (quota 200 Go) monte sur `/opt/project-nomad` dans le LXC : le contenu hors ligne (Wikipedia, cartes, livres) va sur le disque de 4 To, pas sur le SSD.
 - Page de lecture du depot sur `:80` (nginx + docsify) : accueil genere (version, dernier commit, liens, commandes utiles), menu de toutes les pages Markdown (doc utilisateur en tete, tests exclus), recherche, code source brut sous `/src/` (`.git` bloque).
 - `project-nomad-pull.timer` : `git pull --ff-only` du depot le 1er du mois a 10:00 (`Persistent=true`, srv2 n'etant pas allume en permanence), puis regeneration de la page. Refuse de tirer s'il trouve des modifications locales.
 
-- Proxy hosts sur le NPM intranet (vm-intranet) : `nomad.intranet.elmzn.be` -> `192.168.1.204:8080` et `nomad-docs.intranet.elmzn.be` -> `192.168.1.204:80`, certificat wildcard `*.intranet.elmzn.be` existant, Force SSL. Dozzle (`:9999`, sans authentification) volontairement non expose.
+- Proxy hosts sur le NPM intranet (vm-intranet) : `nomad.intranet.elmzn.be` -> `<IP_LXC_NOMAD>:8080` et `nomad-docs.intranet.elmzn.be` -> `<IP_LXC_NOMAD>:80`, certificat wildcard `*.intranet.elmzn.be` existant, Force SSL. Dozzle (`:9999`, sans authentification) volontairement non expose.
 
 #### Notes
-- `*.intranet.elmzn.be` resout publiquement vers une IP privee (`192.168.1.201`) : ces sous-domaines marchent depuis tout le LAN (telephones compris) et via le VPN, sans fichier hosts ni hairpin NAT, et restent injoignables depuis Internet. A privilegier pour tout nouveau service purement interne.
+- `*.intranet.elmzn.be` resout publiquement vers une IP privee (`<IP_VM_INTRANET>`) : ces sous-domaines marchent depuis tout le LAN (telephones compris) et via le VPN, sans fichier hosts ni hairpin NAT, et restent injoignables depuis Internet. A privilegier pour tout nouveau service purement interne.
 - **Isolement volontaire** : NOMAD donne le socket Docker a 3 conteneurs (equivalent root sur l'hote) et se met a jour seul depuis des images `:latest`. Il est donc sur un LXC dedie plutot que sur vm-intranet, qui heberge Immich.
 - L'installeur utilise `/opt/project-nomad` comme dossier d'installation et de donnees : le clone du depot est a part, dans `/opt/project-nomad-src`.
 - Le `git pull` mensuel ne met a jour que le code et la doc ; l'application se met a jour depuis le Command Center ou `update_nomad.sh`.
@@ -108,7 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Portail renommé `home.elmzn.be`, `elmzn.be` devient le portfolio personnel
 
 #### Added
-- LXC 104 `portfolio` (192.168.1.114, pve-extranet) : Debian 12, Docker Engine + plugin compose. Portfolio personnel Next.js (image `ghcr.io/dexteee-r/portfolio`, [repo dédié](https://github.com/dexteee-r/Portfolio)), conteneur durci (lecture seule, `cap_drop ALL`, `no-new-privileges`), public sur `https://elmzn.be` (port 3000).
+- LXC 104 `portfolio` (`<IP_LXC_PORTFOLIO>`, pve-extranet) : Debian 12, Docker Engine + plugin compose. Portfolio personnel Next.js (image `ghcr.io/dexteee-r/portfolio`, [repo dédié](https://github.com/dexteee-r/Portfolio)), conteneur durci (lecture seule, `cap_drop ALL`, `no-new-privileges`), public sur `https://elmzn.be` (port 3000).
 - CI/CD via runner GitHub Actions self-hosted (label `portfolio`) installé dans le LXC sous un utilisateur dédié (groupe `docker`). Le déploiement se déclenche uniquement après une CI verte sur `main`, vérifie explicitement que le dépôt d'origine n'est jamais un fork, ne porte aucun token (`permissions: {}`) et ne fait aucun checkout — durci spécifiquement parce que le dépôt applicatif est public (un runner self-hosted classique y serait exploitable via une pull request de fork). Un timer systemd horaire rejoue le déploiement en filet de secours si le runner le manque.
 - `www.elmzn.be` : redirection 301 (Redirection Host NPM dédié, chemin préservé) vers `https://elmzn.be`, plutôt qu'un proxy partagé — nécessaire pour que l'authentification OAuth du CMS (qui n'accepte que `elmzn.be` en callback) ne casse pas.
 - CMS Sveltia (`/admin`) configuré via une OAuth App GitHub dédiée, jeton sans expiration (le flux de rafraîchissement de token n'est pas compatible avec une OAuth App GitHub classique).
@@ -126,8 +141,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Mise a jour de suivi — monitoring, filestore, linktree en prod, n8n a l'arret
 
 #### Added
-- LXC 108 `monitoring` (192.168.1.118, pve-extranet) : Checkmk 2.5.0p12 Community (natif, OMD). Special Agent Proxmox VE configure et fonctionnel sur l'hote `pve-extranet` — supervision de l'hote + piggyback pour les 8 LXC/VM. En cours : creation manuelle des hotes piggyback dans l'UI (pas d'auto-discovery de ces hotes dans cette version de Checkmk).
-- LXC 201 `filestore` (192.168.1.203, srv2) : FileBrowser Quantum (natif, systemd), interface web de stockage sur le dataset ZFS deja existant `data-pool/files` (512 Go). Public LAN-only sur `https://files.elmzn.be`. Migration du dossier de montage personnel (418 Go / 13 862 fichiers) terminee.
+- LXC 108 `monitoring` (`<IP_LXC_MONITORING>`, pve-extranet) : Checkmk 2.5.0p12 Community (natif, OMD). Special Agent Proxmox VE configure et fonctionnel sur l'hote `pve-extranet` — supervision de l'hote + piggyback pour les 8 LXC/VM. En cours : creation manuelle des hotes piggyback dans l'UI (pas d'auto-discovery de ces hotes dans cette version de Checkmk).
+- LXC 201 `filestore` (`<IP_LXC_FILESTORE>`, srv2) : FileBrowser Quantum (natif, systemd), interface web de stockage sur le dataset ZFS deja existant `data-pool/files` (512 Go). Public LAN-only sur `https://files.elmzn.be`. Migration du dossier de montage personnel (418 Go / 13 862 fichiers) terminee.
 
 #### Changed
 - `links.elmzn.be` (linktree-host) passe en production complete : DNS OVH + Proxy Host NPM (public, sans Access List). Lien Twitch ajoute, page `/stats` entierement refaite (metriques par evenement horodate plutot que compteurs cumules), backup CSV quotidien des statistiques, liens reordonnes par priorite metier.
@@ -146,7 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Notes
 - Suit le pattern déjà établi pour watchlist/n8n/MyTCG : le code applicatif vit dans son propre repo, ce dépôt ne garde que le CHANGELOG + le README.
-- Corrections apportées avant publication du repo : image Docker passée d'Alpine à `node:20-slim` (le module natif `better-sqlite3` a des binaires précompilés surtout pour glibc, Alpine/musl risquait de forcer une compilation à la volée sans toolchain dans l'image) ; déploiement par défaut basculé sur `root@192.168.1.111` plutôt qu'un compte `webadmin` non confirmé sur cette VM (seul `webadmin@lxc-web/.112` est vérifié) ; `NPM_NETWORK_NAME` rendu obligatoire dans le `docker-compose.yml` pour éviter un déploiement silencieux sur le mauvais réseau Docker (l'ancien fallback `vm-extranet_default` n'était qu'une supposition, jamais vérifiée).
+- Corrections apportées avant publication du repo : image Docker passée d'Alpine à `node:20-slim` (le module natif `better-sqlite3` a des binaires précompilés surtout pour glibc, Alpine/musl risquait de forcer une compilation à la volée sans toolchain dans l'image) ; déploiement par défaut basculé sur `root@<IP_VM_EXTRANET>` plutôt qu'un compte `webadmin` non confirmé sur cette VM (seul `webadmin@lxc-web` est vérifié) ; `NPM_NETWORK_NAME` rendu obligatoire dans le `docker-compose.yml` pour éviter un déploiement silencieux sur le mauvais réseau Docker (l'ancien fallback `vm-extranet_default` n'était qu'une supposition, jamais vérifiée).
 - Déploiement effectif sur `vm-extranet` **fait** le même jour : réseau Docker NPM réel identifié en live (`extranet_default` — ni l'hypothèse du code ni l'ancien fichier de doc n'étaient corrects), conteneur `linktree-host` construit et démarré, healthy. Deux bugs corrigés en cours de route : le volume `data/` était créé root:root par Docker (SQLite ne pouvait pas ouvrir son fichier tant que le conteneur tourne en non-root) → fixé en réutilisant l'utilisateur `node` intégré à l'image `node:20-slim` (UID/GID 1000) plutôt que d'en créer un nouveau (qui entrait en conflit de GID) ; `deploy.sh` dépendait de `rsync`, absent de Git Bash sous Windows → remplacé par un transfert `tar` sur `ssh`.
 - Reste à faire (hors de portée sans les identifiants du compte utilisateur) : enregistrement DNS `links.elmzn.be` chez OVH (CNAME vers le DDNS, comme pour MyTCG) + création du Proxy Host NPM — **volontairement public, sans Access List LAN-only**, contrairement à `elmzn.be`/n8n/files, puisque c'est un lien de bio destiné aux réseaux sociaux.
 
@@ -184,7 +199,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 - **MyTCG** déployé sur `pve-extranet` (Beelink) : LXC 107 dédié, **stack native (sans Docker)** — uvicorn/FastAPI + Nginx + SQLite
-  - LXC non-privilégié, `nesting=1`, 4 Go RAM / 2 cœurs / 20 Go disque, IP statique `192.168.1.117`, Debian 13
+  - LXC non-privilégié, `nesting=1`, 4 Go RAM / 2 cœurs / 20 Go disque, IP statique `<IP_LXC_MYTCG>`, Debian 13
   - API en écoute sur `127.0.0.1:8000` (unit `mytcg-api`, hardening systemd), Nginx sert la SPA et les images en direct
   - Données applicatives hors du checkout : `/var/lib/mytcg` (base SQLite + 2,5 Go d'images de cartes)
 - **`mytcg.elmzn.be`** exposé publiquement via NPM (CNAME OVH vers le DDNS, Let's Encrypt, Force SSL, HTTP/2)
@@ -247,7 +262,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 - **n8n** déployé sur `pve-extranet` (Beelink) : LXC 106 dédié, Docker (image `n8nio/n8n:latest`), port 5678
-  - LXC non-privilégié, `nesting=1,keyctl=1`, 2 Go RAM / 2 cœurs / 16 Go disque, IP statique `192.168.1.116`
+  - LXC non-privilégié, `nesting=1,keyctl=1`, 2 Go RAM / 2 cœurs / 16 Go disque, IP statique `<IP_LXC_N8N>`
   - Volume Docker nommé pour la persistance des workflows/credentials (`/home/node/.n8n`)
   - Licence Community Edition activée
 - Accès **LAN uniquement** pour l'instant (pas d'exposition VPN ni sous-domaine public)
@@ -259,7 +274,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Mise à jour Immich — migration VectorChord
 
 #### Changed
-- **Immich** mis à jour `v2.3.1` → `v3.1.0` sur vm-intranet (192.168.1.201)
+- **Immich** mis à jour `v2.3.1` → `v3.1.0` sur vm-intranet (`<IP_VM_INTRANET>`)
 - **PostgreSQL** (service `database`, vm-intranet) : image `tensorchord/pgvecto-rs:pg14-v0.2.0` → `ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0`
 - Reindexation automatique des index `clip_index` et `face_index` (recherche par similarité, reconnaissance faciale) déclenchée au redémarrage du service
 
@@ -277,9 +292,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Stack : Next.js SSR, mode `output: 'standalone'`
   - Process manager : PM2 (`portfolio` — port 3001)
   - Chemin : `/var/www/school_portfolio/mm-elmazani-portfolio/`
-- **Node.js 20 LTS** installé sur lxc-web (192.168.1.112)
+- **Node.js 20 LTS** installé sur lxc-web (`<IP_LXC_WEB>`)
 - **PM2** installé globalement sur lxc-web
-- Proxy host NPM `portfolio.elmzn.be` → `192.168.1.112:80` + SSL Let's Encrypt
+- Proxy host NPM `portfolio.elmzn.be` → `<IP_LXC_WEB>:80` + SSL Let's Encrypt
 - Virtual host Nginx `portfolio.elmzn.be` → reverse proxy `localhost:3001`
 - `docs/web-server-doc-v2.docx` — documentation web server mise à jour (section 5 Next.js complète : RAM, rsync, env vars, standalone, PM2)
 
@@ -293,7 +308,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Ajout Machine #3 ZimaOS NAS + LXC Vaultwarden
 
 #### Added
-- **Machine #3 ZimaOS** déployée sur LAN (192.168.1.0/24)
+- **Machine #3 ZimaOS** déployée sur LAN (`<LAN>`/24)
   - Stockage : nvme 238.5 GB (OS + /DATA 226 GB) + HDD 465.8 GB (btrfs, /DATA/.media)
   - Services actifs : NFS, Samba, ZeroTier, rclone, qBittorrent
   - Services installés (config en cours) : Home Assistant, Pi-hole, Poste.io
@@ -315,13 +330,13 @@ Vérification de l'état réel de toutes les machines vs documentation.
 ### Corrections
 
 #### IPs & Réseaux
-- M1 Proxmox host confirmé : `192.168.1.100` (hostname `pve`, PVE 8.4.14)
-- M2 Proxmox host confirmé : `192.168.1.200` (hostname `srv2`, PVE 9.1.1)
-- VM-INTRANET IP réelle : `192.168.1.201` (doc indiquait `192.168.1.101`)
-- LXC Minecraft changement d'IP : `192.168.1.102` → `192.168.1.202` (cohérence INTRANET 20x)
+- M1 Proxmox host confirmé : `<IP_PVE_EXTRANET>` (hostname `pve`, PVE 8.4.14)
+- M2 Proxmox host confirmé : `<IP_SRV2>` (hostname `srv2`, PVE 9.1.1)
+- VM-INTRANET IP réelle : `<IP_VM_INTRANET>` (doc indiquait `<IP_INTRANET_OBSOLETE>`)
+- LXC Minecraft changement d'IP : `<IP_MC_OBSOLETE>` → `<IP_LXC_MINECRAFT>` (cohérence INTRANET 20x)
 
 #### Services non documentés découverts
-- **LXC lxc-web (102)** sur M1 à `192.168.1.112` (non documenté)
+- **LXC lxc-web (102)** sur M1 à `<IP_LXC_WEB>` (non documenté)
 - **LXC minecraft-cobblemon (200)** sur M2 : 3 profils via `mc-switch`
   - `cobbleverse` (Fabric, actif — heap 10 GB)
   - `cobblemon-academy` (Fabric)
@@ -392,9 +407,9 @@ Complete infrastructure redesign with physical separation EXTRANET/INTRANET.
 
 #### Breaking Changes
 - **IP Addressing:**
-  - Machine #1 (EXTRANET): `192.168.1.111` (was `192.168.1.100`)
-  - Machine #2 (INTRANET): `192.168.1.101` (new)
-  - Proxmox host no longer exposed on `.100`
+  - Machine #1 (EXTRANET): `<IP_VM_EXTRANET>` (was `<IP_PVE_EXTRANET>`)
+  - Machine #2 (INTRANET): `<IP_INTRANET_OBSOLETE>` (new)
+  - Proxmox host no longer exposed on `<IP_PVE_EXTRANET>`
 
 - **Service Architecture:**
   - Services now split across 2 physical machines

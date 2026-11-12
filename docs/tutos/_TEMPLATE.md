@@ -1,6 +1,6 @@
 <!--
 Gabarit de tuto. Copie ce fichier, remplis chaque section, supprime les commentaires.
-Règles : texte FR, code EN, 80/20, valeurs RÉELLES uniquement, IP publique redactée.
+Règles : texte FR, code EN, 80/20, valeurs RÉELLES uniquement (sauf les IP : IP publique et IP privées du LAN redactées en placeholders `<IP_...>`).
 -->
 
 # 🧩 <Service> — Mise en place pas à pas

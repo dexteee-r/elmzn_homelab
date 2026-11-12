@@ -10,7 +10,7 @@ Reconfigurer Machine #1 actuelle pour focus EXTRANET uniquement (DMZ)
 ### 1.1 - Backup Complet Avant Modifications
 ```bash
 # SSH vers Machine #1 (OptiPlex)
-ssh root@192.168.1.100
+ssh root@<IP_PVE_EXTRANET>
 
 # Backup VMs actuelles
 vzdump 100 --storage local --mode snapshot --compress zstd
@@ -28,7 +28,7 @@ tar czf /root/docker-configs-backup-$(date +%Y%m%d).tar.gz \
   extranet/ intranet/
 
 # Copier backups vers Machine #2 (via SCP)
-scp /root/*backup*.tar.gz root@192.168.1.101:/mnt/backups/machine1/
+scp /root/*backup*.tar.gz root@<IP_INTRANET_OBSOLETE>:/mnt/backups/machine1/
 ```
 
 ### 1.2 - Documenter État Actuel
@@ -73,11 +73,11 @@ docker-compose down
 tar czf /tmp/jellyfin-config.tar.gz /mnt/appdata/jellyfin/
 
 # Immich photos (si existe)
-rsync -avz --progress /mnt/photos/ root@192.168.1.101:/mnt/photos/
+rsync -avz --progress /mnt/photos/ root@<IP_INTRANET_OBSOLETE>:/mnt/photos/
 
 # PostgreSQL dump (si DB locale)
 docker exec postgres pg_dumpall -U postgres > /tmp/postgres-dump.sql
-scp /tmp/postgres-dump.sql root@192.168.1.101:/mnt/backups/
+scp /tmp/postgres-dump.sql root@<IP_INTRANET_OBSOLETE>:/mnt/backups/
 ```
 
 ### 2.3 - Désactiver VM-INTRANET
@@ -125,15 +125,15 @@ qm config 100
 ### 3.3 - Configurer Reverse Proxy vers M2
 ```bash
 # SSH vers VM-EXTRANET
-ssh root@192.168.1.111
+ssh root@<IP_VM_EXTRANET>
 
 # Ajouter routes NPM vers services M2 :
-# Via Web UI NPM (http://192.168.1.111:81)
+# Via Web UI NPM (http://<IP_VM_EXTRANET>:81)
 
 Proxy Host 1 :
 ├─ Domain : photos.elmzn.be
 ├─ Scheme : http
-├─ Forward Hostname : 192.168.1.101
+├─ Forward Hostname : <IP_INTRANET_OBSOLETE>
 ├─ Forward Port : 2283
 ├─ SSL : Request Let's Encrypt
 └─ Force SSL : Yes
@@ -141,7 +141,7 @@ Proxy Host 1 :
 Proxy Host 2 :
 ├─ Domain : files.elmzn.be
 ├─ Scheme : http
-├─ Forward Hostname : 192.168.1.101
+├─ Forward Hostname : <IP_INTRANET_OBSOLETE>
 ├─ Forward Port : 8080
 ├─ SSL : Request Let's Encrypt
 └─ Force SSL : Yes
@@ -149,7 +149,7 @@ Proxy Host 2 :
 Proxy Host 3 :
 ├─ Domain : grafana.elmzn.be
 ├─ Scheme : http
-├─ Forward Hostname : 192.168.1.101
+├─ Forward Hostname : <IP_INTRANET_OBSOLETE>
 ├─ Forward Port : 3000
 ├─ SSL : Request Let's Encrypt
 ├─ Force SSL : Yes
@@ -159,7 +159,7 @@ Proxy Host 3 :
 ### 3.4 - Configurer Firewall UFW VM-EXTRANET
 ```bash
 # SSH VM-EXTRANET
-ssh root@192.168.1.111
+ssh root@<IP_VM_EXTRANET>
 
 # Reset UFW (clean slate)
 ufw --force reset
@@ -169,7 +169,7 @@ ufw default deny incoming
 ufw default allow outgoing
 
 # SSH depuis LAN uniquement
-ufw allow from 192.168.1.0/24 to any port 22
+ufw allow from <LAN>/24 to any port 22
 
 # Services publics
 ufw allow 80/tcp    # HTTP
@@ -177,8 +177,8 @@ ufw allow 443/tcp   # HTTPS
 ufw allow 1194/udp  # OpenVPN
 
 # Communication avec M2 INTRANET
-ufw allow from 192.168.1.101
-ufw allow to 192.168.1.101
+ufw allow from <IP_INTRANET_OBSOLETE>
+ufw allow to <IP_INTRANET_OBSOLETE>
 
 # Activer
 ufw enable
@@ -194,20 +194,20 @@ ufw status verbose
 ### 4.1 - Test Ping Basique
 ```bash
 # Depuis M1 Proxmox host
-ping 192.168.1.101  # M2 host → OK
-ping 192.168.1.101  # M2 VM-INTRANET → OK
+ping <IP_INTRANET_OBSOLETE>  # M2 host → OK
+ping <IP_INTRANET_OBSOLETE>  # M2 VM-INTRANET → OK
 
 # Depuis M1 VM-EXTRANET
-ssh root@192.168.1.111
-ping 192.168.1.101  # M2 → OK
+ssh root@<IP_VM_EXTRANET>
+ping <IP_INTRANET_OBSOLETE>  # M2 → OK
 ```
 
 ### 4.2 - Test Reverse Proxy NPM → M2
 ```bash
 # Depuis VM-EXTRANET
-curl -I http://192.168.1.101:2283  # Immich → HTTP 200
-curl -I http://192.168.1.101:8080  # Nextcloud → HTTP 200
-curl -I http://192.168.1.101:3000  # Grafana → HTTP 302 (login)
+curl -I http://<IP_INTRANET_OBSOLETE>:2283  # Immich → HTTP 200
+curl -I http://<IP_INTRANET_OBSOLETE>:8080  # Nextcloud → HTTP 200
+curl -I http://<IP_INTRANET_OBSOLETE>:3000  # Grafana → HTTP 302 (login)
 ```
 
 ### 4.3 - Test Accès Externe (depuis smartphone 4G)
@@ -225,7 +225,7 @@ https://grafana.elmzn.be     # → Doit charger Grafana (si pas access list)
 ### 5.1 - Préparer Storage Backup sur M1
 ```bash
 # SSH M1 Proxmox host
-ssh root@192.168.1.100
+ssh root@<IP_PVE_EXTRANET>
 
 # Créer dataset ZFS backup (si HDD 500 GB existe)
 zfs create tank-hdd/backups-m2
@@ -238,13 +238,13 @@ chmod 700 /mnt/backups-m2
 ### 5.2 - Configurer Restic depuis M2
 ```bash
 # SSH M2 VM-INTRANET
-ssh root@192.168.1.101
+ssh root@<IP_INTRANET_OBSOLETE>
 
 # Installer Restic
 apt install restic -y
 
 # Initialiser repo distant (via SSH)
-export RESTIC_REPOSITORY=sftp:root@192.168.1.100:/mnt/backups-m2
+export RESTIC_REPOSITORY=sftp:root@<IP_PVE_EXTRANET>:/mnt/backups-m2
 export RESTIC_PASSWORD="CHANGE_ME_STRONG_PASSWORD"
 
 restic init
@@ -262,7 +262,7 @@ restic snapshots
 # Créer script backup
 cat > /root/backup-to-m1.sh << 'EOF'
 #!/bin/bash
-export RESTIC_REPOSITORY=sftp:root@192.168.1.100:/mnt/backups-m2
+export RESTIC_REPOSITORY=sftp:root@<IP_PVE_EXTRANET>:/mnt/backups-m2
 export RESTIC_PASSWORD="CHANGE_ME_STRONG_PASSWORD"
 
 # Backup photos (hebdomadaire)
@@ -298,7 +298,7 @@ crontab -e
 ### 6.1 - Uptime Kuma (Monitoring Uptime)
 ```bash
 # SSH VM-EXTRANET
-ssh root@192.168.1.111
+ssh root@<IP_VM_EXTRANET>
 
 cd /opt/extranet
 
@@ -319,13 +319,13 @@ EOF
 docker-compose up -d uptime-kuma
 
 # Accès Web UI
-http://192.168.1.111:3001
+http://<IP_VM_EXTRANET>:3001
 
 # Configurer monitoring :
-# - Jellyfin : http://192.168.1.101:8096
-# - Immich : http://192.168.1.101:2283
-# - Nextcloud : http://192.168.1.101:8080
-# - Grafana : http://192.168.1.101:3000
+# - Jellyfin : http://<IP_INTRANET_OBSOLETE>:8096
+# - Immich : http://<IP_INTRANET_OBSOLETE>:2283
+# - Nextcloud : http://<IP_INTRANET_OBSOLETE>:8080
+# - Grafana : http://<IP_INTRANET_OBSOLETE>:3000
 ```
 
 ---
@@ -352,17 +352,17 @@ Si tout ✅ → Architecture complète opérationnelle ! 🎉
 ```
 Internet
    ↓
-Box (192.168.1.1)
+Box (<IP_BOX>)
    ↓ (ports 80/443/1194 forward)
    ↓
-M1 EXTRANET (192.168.1.111)
+M1 EXTRANET (<IP_VM_EXTRANET>)
 ├─ Nginx Proxy Manager (reverse proxy)
 ├─ OpenVPN (accès distant)
 ├─ Fail2ban (protection)
 ├─ Uptime Kuma (monitoring)
 └─ Proxy vers ↓
 
-M2 INTRANET (192.168.1.101)
+M2 INTRANET (<IP_INTRANET_OBSOLETE>)
 ├─ Immich (photos 4 TB)
 ├─ Nextcloud (fichiers 4 TB)
 ├─ Grafana (monitoring)

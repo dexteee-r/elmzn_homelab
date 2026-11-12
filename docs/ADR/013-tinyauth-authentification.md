@@ -190,7 +190,7 @@ Internet → NPM (port 443)
 
 ### Architecture
 ```
-VM-EXTRANET (192.168.1.111)
+VM-EXTRANET (<IP_VM_EXTRANET>)
 ├─ Docker containers
 │  ├─ NPM (ports 80/443)
 │  │  └─ Forward auth → TinyAuth

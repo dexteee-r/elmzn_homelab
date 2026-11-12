@@ -39,9 +39,9 @@ Alimentation: 850W
 ### **Configuration réseau Proxmox M2:**
 ```
 Hostname: srv2
-IP: 192.168.1.200/24
-Gateway: 192.168.1.1
-DNS: 192.168.1.1
+IP: <IP_SRV2>/24
+Gateway: <IP_BOX>
+DNS: <IP_BOX>
 Interface: vmbr0 (bridge sur nic0)
 ```
 
@@ -61,7 +61,7 @@ apt update && apt upgrade -y
 apt install -y zfsutils-linux nfs-kernel-server samba smartmontools htop curl wget vim
 ```
 
-**✅ Proxmox M2 opérationnel:** https://192.168.1.200:8006
+**✅ Proxmox M2 opérationnel:** https://`<IP_SRV2>`:8006
 
 ---
 
@@ -112,10 +112,10 @@ zfs list
 
 ### **Fichier /etc/exports:**
 ```bash
-/mnt/data-pool/photos 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
-/mnt/data-pool/files 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
-/mnt/data-pool/backups 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
-/mnt/data-pool/media 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
+/mnt/data-pool/photos <LAN>/24(rw,sync,no_subtree_check,no_root_squash)
+/mnt/data-pool/files <LAN>/24(rw,sync,no_subtree_check,no_root_squash)
+/mnt/data-pool/backups <LAN>/24(rw,sync,no_subtree_check,no_root_squash)
+/mnt/data-pool/media <LAN>/24(rw,sync,no_subtree_check,no_root_squash)
 ```
 
 ### **Activation service NFS:**
@@ -192,7 +192,7 @@ smbclient -L localhost -U root
 # 4 shares visibles
 ```
 
-**Accès Windows:** `\\192.168.1.200` (root / admin)
+**Accès Windows:** `\\<IP_SRV2>` (root / admin)
 
 **✅ Samba configuré pour accès Windows/Mac**
 
@@ -227,9 +227,9 @@ iface lo inet loopback
 
 auto ens18
 iface ens18 inet static
-    address 192.168.1.201/24
-    gateway 192.168.1.1
-    dns-nameservers 192.168.1.1 8.8.8.8
+    address <IP_VM_INTRANET>/24
+    gateway <IP_BOX>
+    dns-nameservers <IP_BOX> 8.8.8.8
 ```
 
 ### **Problème réseau initial:**
@@ -253,7 +253,7 @@ systemctl enable qemu-guest-agent --now
 usermod -aG docker admin
 ```
 
-**✅ VM-INTRANET créée et configurée (192.168.1.201)**
+**✅ VM-INTRANET créée et configurée (`<IP_VM_INTRANET>`)**
 
 ---
 
@@ -266,18 +266,18 @@ mkdir -p /mnt/{photos,files,backups,media}
 
 ### **Montage NFS depuis Proxmox M2:**
 ```bash
-mount -t nfs 192.168.1.200:/mnt/data-pool/photos /mnt/photos
-mount -t nfs 192.168.1.200:/mnt/data-pool/files /mnt/files
-mount -t nfs 192.168.1.200:/mnt/data-pool/backups /mnt/backups
-mount -t nfs 192.168.1.200:/mnt/data-pool/media /mnt/media
+mount -t nfs <IP_SRV2>:/mnt/data-pool/photos /mnt/photos
+mount -t nfs <IP_SRV2>:/mnt/data-pool/files /mnt/files
+mount -t nfs <IP_SRV2>:/mnt/data-pool/backups /mnt/backups
+mount -t nfs <IP_SRV2>:/mnt/data-pool/media /mnt/media
 ```
 
 ### **Configuration /etc/fstab (mounts permanents):**
 ```
-192.168.1.200:/mnt/data-pool/photos  /mnt/photos  nfs defaults 0 0
-192.168.1.200:/mnt/data-pool/files   /mnt/files   nfs defaults 0 0
-192.168.1.200:/mnt/data-pool/backups /mnt/backups nfs defaults 0 0
-192.168.1.200:/mnt/data-pool/media   /mnt/media   nfs defaults 0 0
+<IP_SRV2>:/mnt/data-pool/photos  /mnt/photos  nfs defaults 0 0
+<IP_SRV2>:/mnt/data-pool/files   /mnt/files   nfs defaults 0 0
+<IP_SRV2>:/mnt/data-pool/backups /mnt/backups nfs defaults 0 0
+<IP_SRV2>:/mnt/data-pool/media   /mnt/media   nfs defaults 0 0
 ```
 
 ### **Validation:**
@@ -453,7 +453,7 @@ docker compose ps
 - **Solution:** Abandonné, `latest` fonctionne correctement
 
 ### **Accès NPM:**
-- URL: `http://192.168.1.201:81`
+- URL: `http://<IP_VM_INTRANET>:81`
 - Login default: `admin@example.com` / `changeme`
 - Changé email + password admin
 
@@ -551,7 +551,7 @@ CPU: 2 cores
 RAM: 2 GB
 Disk: 20 GB
 Network: vmbr0
-IP: 192.168.1.202
+IP: <IP_LXC_MINECRAFT>
 Usage: Tests distributions Linux (on-demand, pas H24)
 ```
 
@@ -564,17 +564,17 @@ Usage: Tests distributions Linux (on-demand, pas H24)
 ### **Architecture déployée:**
 
 ```
-Machine M2 (srv2) - 192.168.1.200:
+Machine M2 (srv2) - <IP_SRV2>:
 ├─ Proxmox VE 9.1 (host)
-│  └─ Web UI: https://192.168.1.200:8006
+│  └─ Web UI: https://<IP_SRV2>:8006
 ├─ ZFS pool data-pool (3.6TB HDD IronWolf)
 │  ├─ photos (2TB quota) → NFS + Samba
 │  ├─ files (512GB quota) → NFS + Samba
 │  ├─ backups (512GB quota) → NFS + Samba
 │  └─ media (512GB quota) → NFS + Samba
-├─ NFS server (exports vers 192.168.1.0/24)
-├─ Samba server (accès Windows: \\192.168.1.200)
-├─ VM-INTRANET (101) - 192.168.1.201:
+├─ NFS server (exports vers <LAN>/24)
+├─ Samba server (accès Windows: \\<IP_SRV2>)
+├─ VM-INTRANET (101) - <IP_VM_INTRANET>:
 │  ├─ Debian 13 (6GB RAM, 3 vCPU, 40GB disk)
 │  ├─ NFS mounts: /mnt/{photos,files,backups,media}
 │  └─ Docker stack:
@@ -586,12 +586,12 @@ Machine M2 (srv2) - 192.168.1.200:
 │     ├─ Redis (immich_redis) ✅
 │     ├─ ML (immich_machine_learning) ✅
 │     └─ Node Exporter (:9100) ✅
-└─ VM-DEBIAN-TEST (102) - 192.168.1.202 ✅
+└─ VM-DEBIAN-TEST (102) - <IP_LXC_MINECRAFT> ✅
 
-Machine M1 (OptiPlex) - 192.168.1.100:
+Machine M1 (OptiPlex) - <IP_PVE_EXTRANET>:
 ├─ Proxmox VE 8.4 (host)
-├─ VM-EXTRANET (192.168.1.111) - NPM public, OpenVPN
-└─ VM-INTRANET (192.168.1.101) - À SUPPRIMER (obsolète)
+├─ VM-EXTRANET (<IP_VM_EXTRANET>) - NPM public, OpenVPN
+└─ VM-INTRANET (<IP_INTRANET_OBSOLETE>) - À SUPPRIMER (obsolète)
 ```
 
 ### **Services accessibles:**
@@ -602,17 +602,17 @@ Immich:      https://immich.intranet.elmzn.be
 NPM:         https://npm.intranet.elmzn.be
 Grafana:     https://grafana.intranet.elmzn.be
 Prometheus:  https://prometheus.intranet.elmzn.be
-Proxmox M2:  https://192.168.1.200:8006
-Proxmox M1:  https://192.168.1.100:8006
-Samba M2:    \\192.168.1.200 (root / admin)
+Proxmox M2:  https://<IP_SRV2>:8006
+Proxmox M1:  https://<IP_PVE_EXTRANET>:8006
+Samba M2:    \\<IP_SRV2> (root / admin)
 ```
 
 **Accès direct IP (alternatif):**
 ```
-Immich:      http://192.168.1.201:2283
-NPM:         http://192.168.1.201:81
-Grafana:     http://192.168.1.201:3000
-Prometheus:  http://192.168.1.201:9090
+Immich:      http://<IP_VM_INTRANET>:2283
+NPM:         http://<IP_VM_INTRANET>:81
+Grafana:     http://<IP_VM_INTRANET>:3000
+Prometheus:  http://<IP_VM_INTRANET>:9090
 ```
 
 ---
@@ -679,19 +679,19 @@ NPM: latest
 
 ## 📝 CREDENTIALS NOTÉS
 
-### **Proxmox M2 (192.168.1.200:8006):**
+### **Proxmox M2 (`<IP_SRV2>`:8006):**
 ```
 User: root
 Password: [défini lors installation]
 ```
 
-### **VM-INTRANET (192.168.1.201):**
+### **VM-INTRANET (`<IP_VM_INTRANET>`):**
 ```
 Root: [password fort]
 Admin: [password fort]
 ```
 
-### **Samba (\\192.168.1.200):**
+### **Samba (\\`<IP_SRV2>`):**
 ```
 User: root
 Password: admin
@@ -731,7 +731,7 @@ Password: [depuis .env GRAFANA_PASSWORD]
 ### **Court terme (à faire):**
 
 1. **Nettoyage M1 (OptiPlex):**
-   - [ ] SSH vers Proxmox M1 (192.168.1.100)
+   - [ ] SSH vers Proxmox M1 (`<IP_PVE_EXTRANET>`)
    - [ ] Stop VM-INTRANET (ID 101): `qm stop 101`
    - [ ] Supprimer VM-INTRANET: `qm destroy 101`
    - [ ] Vérifier services obsolètes host
@@ -739,15 +739,15 @@ Password: [depuis .env GRAFANA_PASSWORD]
 
 2. **Configuration NPM M1 (EXTRANET):**
    - [ ] Créer proxy hosts publics vers M2
-   - [ ] `media.elmzn.be` → `192.168.1.201:2283` (Immich)
+   - [ ] `media.elmzn.be` → `<IP_VM_INTRANET>:2283` (Immich)
    - [ ] `photos.elmzn.be` → Idem
-   - [ ] `grafana.elmzn.be` → `192.168.1.201:3000` (Access List LAN+VPN)
+   - [ ] `grafana.elmzn.be` → `<IP_VM_INTRANET>:3000` (Access List LAN+VPN)
    - [ ] Certificats SSL Let's Encrypt
 
 3. **Port forwarding Box Internet:**
-   - [ ] 80/tcp → 192.168.1.111:80
-   - [ ] 443/tcp → 192.168.1.111:443
-   - [ ] 1194/udp → 192.168.1.111:1194 (OpenVPN existant)
+   - [ ] 80/tcp → `<IP_VM_EXTRANET>`:80
+   - [ ] 443/tcp → `<IP_VM_EXTRANET>`:443
+   - [ ] 1194/udp → `<IP_VM_EXTRANET>`:1194 (OpenVPN existant)
 
 4. **Tests accès externe:**
    - [ ] `https://media.elmzn.be` depuis Internet
@@ -809,7 +809,7 @@ nano /etc/exports
 exportfs -ra
 systemctl restart nfs-kernel-server
 showmount -e localhost
-mount -t nfs 192.168.1.200:/mnt/data-pool/photos /mnt/photos
+mount -t nfs <IP_SRV2>:/mnt/data-pool/photos /mnt/photos
 ```
 
 ### **Samba:**

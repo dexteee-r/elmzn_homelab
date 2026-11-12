@@ -54,9 +54,9 @@ Email : ton@email.com (pour alertes)
 Réseau :
 ├─ Interface : enp0s31f6 (ou similaire)
 ├─ Hostname : pve-intranet
-├─ IP Address : 192.168.1.101/24
-├─ Gateway : 192.168.1.1
-└─ DNS : 192.168.1.1 (ou 8.8.8.8)
+├─ IP Address : <IP_INTRANET_OBSOLETE>/24
+├─ Gateway : <IP_BOX>
+└─ DNS : <IP_BOX> (ou 8.8.8.8)
 
 Confirmer installation → Attendre 10-15 min
 ```
@@ -68,7 +68,7 @@ Confirmer installation → Attendre 10-15 min
 # Attendre boot Proxmox (30s)
 
 # Accès Web UI depuis PC local :
-https://192.168.1.101:8006
+https://<IP_INTRANET_OBSOLETE>:8006
 
 # Login :
 User: root
@@ -84,7 +84,7 @@ Password: [mot de passe choisi]
 ### 3.1 - Désactiver Enterprise Repo (gratuit)
 ```bash
 # SSH vers Proxmox
-ssh root@192.168.1.101
+ssh root@<IP_INTRANET_OBSOLETE>
 
 # Désactiver repo payant
 sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/pve-enterprise.list
@@ -141,9 +141,9 @@ apt install nfs-kernel-server -y
 
 # Ajouter exports NFS
 cat >> /etc/exports << EOF
-/mnt/data-pool/photos 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
-/mnt/data-pool/files 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
-/mnt/data-pool/backups 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
+/mnt/data-pool/photos <LAN>/24(rw,sync,no_subtree_check,no_root_squash)
+/mnt/data-pool/files <LAN>/24(rw,sync,no_subtree_check,no_root_squash)
+/mnt/data-pool/backups <LAN>/24(rw,sync,no_subtree_check,no_root_squash)
 EOF
 
 # Appliquer config
@@ -156,11 +156,11 @@ showmount -e localhost
 
 ### 3.4 - Ajouter Storage dans Proxmox Web UI
 ```
-# Aller dans Web UI : https://192.168.1.101:8006
+# Aller dans Web UI : https://<IP_INTRANET_OBSOLETE>:8006
 # Datacenter > Storage > Add > NFS
 
 ID : nfs-photos
-Server : 192.168.1.101
+Server : <IP_INTRANET_OBSOLETE>
 Export : /mnt/data-pool/photos
 Content : VZDump backup file, Disk image
 
@@ -259,7 +259,7 @@ Redémarrer
 ### 4.4 - Configuration Post-Install VM
 ```bash
 # Login SSH depuis Proxmox host
-ssh root@192.168.1.101  # (IP VM, pas host)
+ssh root@<IP_INTRANET_OBSOLETE>  # (IP VM, pas host)
 
 # Update système
 apt update && apt upgrade -y
@@ -283,10 +283,10 @@ nano /etc/network/interfaces
 # Exemple :
 auto ens18
 iface ens18 inet static
-  address 192.168.1.101
+  address <IP_INTRANET_OBSOLETE>
   netmask 255.255.255.0
-  gateway 192.168.1.1
-  dns-nameservers 192.168.1.1
+  gateway <IP_BOX>
+  dns-nameservers <IP_BOX>
 
 # Redémarrer réseau
 systemctl restart networking
@@ -296,9 +296,9 @@ mkdir -p /mnt/photos /mnt/files /mnt/backups
 
 # Ajouter au fstab
 cat >> /etc/fstab << EOF
-192.168.1.101:/mnt/data-pool/photos  /mnt/photos  nfs  defaults  0  0
-192.168.1.101:/mnt/data-pool/files   /mnt/files   nfs  defaults  0  0
-192.168.1.101:/mnt/data-pool/backups /mnt/backups nfs  defaults  0  0
+<IP_INTRANET_OBSOLETE>:/mnt/data-pool/photos  /mnt/photos  nfs  defaults  0  0
+<IP_INTRANET_OBSOLETE>:/mnt/data-pool/files   /mnt/files   nfs  defaults  0  0
+<IP_INTRANET_OBSOLETE>:/mnt/data-pool/backups /mnt/backups nfs  defaults  0  0
 EOF
 
 # Monter maintenant
@@ -471,8 +471,8 @@ Installer Windows normalement
 ### 7.1 - Tests Connectivity
 ```bash
 # Depuis VM-INTRANET
-ping 192.168.1.1        # Gateway OK
-ping 192.168.1.111      # Machine #1 EXTRANET OK
+ping <IP_BOX>        # Gateway OK
+ping <IP_VM_EXTRANET>      # Machine #1 EXTRANET OK
 ping 8.8.8.8            # Internet OK
 
 # Test NFS mounts
@@ -483,16 +483,16 @@ ls -lh /mnt/photos/test.txt  # Doit exister
 ### 7.2 - Tests Services
 ```bash
 # Immich
-curl http://192.168.1.101:2283/api/server-info
+curl http://<IP_INTRANET_OBSOLETE>:2283/api/server-info
 
 # Nextcloud
-curl http://192.168.1.101:8080
+curl http://<IP_INTRANET_OBSOLETE>:8080
 
 # Prometheus
-curl http://192.168.1.101:9090/metrics
+curl http://<IP_INTRANET_OBSOLETE>:9090/metrics
 
 # Grafana
-curl http://192.168.1.101:3000
+curl http://<IP_INTRANET_OBSOLETE>:3000
 ```
 
 ### 7.3 - Tests VMs Lab
@@ -512,12 +512,12 @@ qm shutdown 201
 ## ✅ CHECKLIST FINALE
 
 Machine #2 (INTRANET) opérationnelle si :
-- [x] Proxmox accessible https://192.168.1.101:8006
+- [x] Proxmox accessible https://`<IP_INTRANET_OBSOLETE>`:8006
 - [x] ZFS pool 4 TB créé et monté
 - [x] NFS shares configurés
 - [x] VM-INTRANET running avec services Docker
-- [x] Immich accessible depuis LAN (http://192.168.1.101:2283)
-- [x] Nextcloud accessible depuis LAN (http://192.168.1.101:8080)
+- [x] Immich accessible depuis LAN (http://`<IP_INTRANET_OBSOLETE>`:2283)
+- [x] Nextcloud accessible depuis LAN (http://`<IP_INTRANET_OBSOLETE>`:8080)
 - [x] VM-DEV-LINUX créée (peut démarrer on-demand)
 - [x] VM-DEV-WINDOWS créée (peut démarrer on-demand)
 - [x] Communication avec Machine #1 OK
